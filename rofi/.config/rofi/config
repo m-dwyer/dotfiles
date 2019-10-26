@@ -1,0 +1,3 @@
+rofi.theme: /usr/share/rofi/themes/glue_pro_blue.rasi
+rofi.font: Ubuntu Mono 14
+rofi.dpi: 200
