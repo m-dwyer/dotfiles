@@ -15,6 +15,15 @@ set $mod Mod4
 # is used in the bar {} block below.
 font pango:Ubuntu Mono 14
 
+set_from_resource $fg i3wm.foreground #f0f0f0
+set_from_resource $bg i3wm.background #f0f0f0
+
+client.focused		$bg	$bg	$fg	$bg	$bg
+client.focused_inactive $bg	$bg	$fg	$bg	$bg
+client.unfocused	$bg	$bg	$fg	$bg	$bg
+client.urgent		$bg	$bg	$fg	$bg	$bg
+client.placeholder	$bg	$bg	$fg	$bg	$bg
+
 # This font is widely installed, provides lots of unicode glyphs, right-to-left
 # text rendering and scalability on retina/hidpi displays (thanks to pango).
 #font pango:DejaVu Sans Mono 8
