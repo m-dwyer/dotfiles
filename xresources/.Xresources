@@ -1,0 +1,93 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Definitions
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+#define FONT0 Ubuntu Mono
+#define SIZE0 14
+#define STYLE0 Regular
+
+#define FONT1 Ubuntu Mono Bold
+#define SIZE1 14
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Generic
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Xft.dpi: 220
+Xft.autohint: 0
+Xft.lcdfilter: lcddefault
+Xft.hintstyle: hintfull
+Xft.hinting: 1
+Xft.antialias: 1
+Xft.rgba: rgb
+
+! Cursor
+Xcursor.theme: Adwaita
+!Xcursor.size: 28
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! URxvt specific
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+! Extensions
+URxvt.perl-ext-common: font-size
+
+URxvt.saveLines: 2000
+URxvt.scrollBar: false
+URxvt.scrollstyle: rxvt
+URxvt.termName: xterm-256color
+URxvt.urgentOnBell: true
+URxvt.cursorBlink: false
+URxvt.loginShell: true
+
+! do not scroll with output
+URxvt*scrollTtyOutput: false
+! scroll in relation to buffer (with mouse scroll or Shift+Page Up)
+URxvt*scrollWithBuffer: true
+! scroll back to the bottom on keypress
+URxvt*scrollTtyKeypress: true
+
+URxvt.keysym.C-Down: font-size:decrease
+URxvt.keysym.C-Up: font-size:increase
+URxvt.keysym.C-Left: font-size:reset
+
+URxvt*font: xft:Ubuntu Mono:style=Regular:size=14
+URxvt.letterSpace: -1
+
+! special
+*.foreground:   #a7a7a7
+*.background:   #1e1e1e
+*.cursorColor:  #a7a7a7
+
+! black
+*.color0:       #1e1e1e
+*.color8:       #5f5a60
+
+! red
+*.color1:       #cf6a4c
+*.color9:       #cf6a4c
+
+! green
+*.color2:       #8f9d6a
+*.color10:      #8f9d6a
+
+! yellow
+*.color3:       #f9ee98
+*.color11:      #f9ee98
+
+! blue
+*.color4:       #7587a6
+*.color12:      #7587a6
+
+! magenta
+*.color5:       #9b859d
+*.color13:      #9b859d
+
+! cyan
+*.color6:       #afc4db
+*.color14:      #afc4db
+
+! white
+*.color7:       #a7a7a7
+*.color15:      #ffffff
+
