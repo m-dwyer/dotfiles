@@ -2,13 +2,6 @@
 ! Definitions
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-#define FONT0 Ubuntu Mono
-#define SIZE0 14
-#define STYLE0 Regular
-
-#define FONT1 Ubuntu Mono Bold
-#define SIZE1 14
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Generic
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -51,7 +44,7 @@ URxvt.keysym.C-Down: font-size:decrease
 URxvt.keysym.C-Up: font-size:increase
 URxvt.keysym.C-Left: font-size:reset
 
-URxvt*font: xft:Ubuntu Mono:style=Regular:size=14
+URxvt*font: xft:Inconsolata:style=Bold:size=16
 URxvt.letterSpace: -1
 
 ! special
