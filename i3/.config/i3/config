@@ -18,11 +18,11 @@ font pango:Ubuntu Mono 14
 set_from_resource $fg i3wm.foreground #f0f0f0
 set_from_resource $bg i3wm.background #f0f0f0
 
-client.focused		$bg	$bg	$fg	$bg	$bg
-client.focused_inactive $bg	$bg	$fg	$bg	$bg
-client.unfocused	$bg	$bg	$fg	$bg	$bg
-client.urgent		$bg	$bg	$fg	$bg	$bg
-client.placeholder	$bg	$bg	$fg	$bg	$bg
+#client.focused		$bg	$bg	$fg	$bg	$bg
+#client.focused_inactive $bg	$bg	$fg	$bg	$bg
+#client.unfocused	$bg	$bg	$fg	$bg	$bg
+#client.urgent		$bg	$bg	$fg	$bg	$bg
+#client.placeholder	$bg	$bg	$fg	$bg	$bg
 
 # This font is widely installed, provides lots of unicode glyphs, right-to-left
 # text rendering and scalability on retina/hidpi displays (thanks to pango).
@@ -40,6 +40,8 @@ exec --no-startup-id xss-lock --transfer-sleep-lock -- betterlockscreen -l blur
 # NetworkManager is the most popular way to manage wireless networks on Linux,
 # and nm-applet is a desktop environment-independent system tray GUI for it.
 exec --no-startup-id nm-applet
+
+exec_always --no-startup-id /usr/bin/lxpolkit &
 
 # Use pactl to adjust volume in PulseAudio.
 set $refresh_i3status killall -SIGUSR1 i3status
