@@ -9,15 +9,24 @@ hs.loadSpoon("SaveSpotify")
 SpotifySaver = hs.loadSpoon("SaveSpotify")
 
 -- Bind hotkey to both save and like the current Spotify track
-hs.hotkey.bind({"cmd", "shift"}, "S", function()
+hs.hotkey.bind({ "cmd", "shift" }, "S", function()
    SpotifySaver:saveCurrentTrack()
    SpotifySaver:likeCurrentTrack()
 end)
 
 -- Load Obsidian Spoon
-Obsidian = hs.loadSpoon("Obsidian")
+hs.loadSpoon("Obsidian")
 
 -- Bind hotkey to show our Obsidian menu
-hs.hotkey.bind({"cmd", "shift"}, "M", function()
-   Obsidian:showMenu()
+hs.hotkey.bind({ "cmd", "shift" }, "M", function()
+   spoon.Obsidian:showMenu()
 end)
+
+-- Load Cheetah
+hs.loadSpoon("Cheetah")
+spoon.Cheetah:bindHotkeys({
+{
+   file = "System",
+   toggle = { { "cmd", "shift" }, "H" }
+}
+})
