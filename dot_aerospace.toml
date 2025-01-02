@@ -215,6 +215,6 @@ run = 'move-node-to-workspace 6'
 
 # Workspace - Misc
 # Catch-all for anything else
-# [[on-window-detected]]
-# if.app-name-regex-substring = '.*'
-# run = ['layout floating', 'move-node-to-workspace 7']
+[[on-window-detected]]
+if.app-name-regex-substring = '.*'
+run = ['layout floating', 'move-node-to-workspace 7']
