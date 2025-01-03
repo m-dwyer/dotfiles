@@ -29,8 +29,45 @@ obj.config = {
 
 obj.bindings = {}
 
+local last_changed = {}
+local last_file_contents = {}
+
 local function getFilePath(filename)
     return obj.config.dir .. '/' .. filename .. '.csv'
+end
+
+local function fileExists(path)
+    local file = io.open(path, "r")
+    if file then
+        file:close()
+        return true
+    else
+        return false
+    end
+end
+
+local function getLastModified(path)
+    local timestamp = os.time()
+    if fileExists(path) then
+        timestamp = hs.fs.attributes(path, 'modification')
+    end
+
+    return timestamp
+end
+
+local function loadModifiedFile(path)
+    local lastModified = getLastModified(path)
+    if last_changed[path] == nil or last_changed[path] < lastModified then
+        -- We don't track the file or it was more recently modified, so load it
+        local file = io.open(path, "r")
+        if not file then
+            return
+        end
+        last_file_contents[path] = file:read("*a")
+        last_changed[path] = lastModified
+    end
+
+    return last_file_contents[path]
 end
 
 local function createBindingHtml(row)
@@ -67,17 +104,15 @@ local function createAllBindingHtml(cheatsheetRows)
 end
 
 local function loadCss()
-    local css_path = hs.spoons.resourcePath('themes/' .. obj.theme .. '/style.css')
-    local css_file = io.open(css_path, "r")
+    local cssPath = hs.spoons.resourcePath('themes/' .. obj.theme .. '/style.css')
+    local cssFileContents = loadModifiedFile(cssPath)
 
-    if css_file == nil then
+    if cssFileContents == nil then
         hs.dialog.alert(200, 200, nil, "No style sheet", "Couldn't load theme stylesheet", "OK")
         return ''
     end
-    local css = css_file:read("*a")
-    css_file:close()
 
-    return css
+    return cssFileContents
 end
 
 local function createHtml(cheatsheetName, cheatsheetRows)
@@ -107,14 +142,14 @@ local function createHtml(cheatsheetName, cheatsheetRows)
 end
 
 local function loadCheatsheet(name, filename)
-    local file = io.open(filename, "r")
-    if not file then
-        print("Error: Could not open file " .. filename)
+    local fileContents = loadModifiedFile(filename)
+    if fileContents == nil then
+        hs.dialog.alert(200, 200, nil, "No style sheet", "Couldn't load cheatsheet", "OK")
         return
     end
 
     local cheatsheetRows = {}
-    for line in file:lines() do
+    for line in fileContents:gmatch("[^\r\n]+") do
         local values = {}
         for i in string.gmatch(line, '([^,]+)') do
             values[#values + 1] = i
@@ -157,10 +192,6 @@ function obj:show(file)
 
     self.sheetView:html(cheatsheet)
     self.sheetView:show()
-
-    print("done")
-
-    return
 end
 
 function obj:toggle(file)
@@ -229,13 +260,7 @@ function obj:setPosition(position)
 end
 
 function obj:bindHotkeys(mappings)
-    for i, entry in ipairs(mappings) do
-        print("i is: ", i)
-        print("File: ", entry.file)
-        print("Modifiers: ", table.concat(entry.toggle[1], " + "))
-        print("Key: ", entry.toggle[2])
-        print("---")
-
+    for _, entry in ipairs(mappings) do
         hs.hotkey.bind(entry.toggle[1], entry.toggle[2], function()
             self:toggle(entry.file)
         end)
