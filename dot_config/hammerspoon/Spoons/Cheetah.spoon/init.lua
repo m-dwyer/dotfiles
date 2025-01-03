@@ -181,6 +181,12 @@ function obj:init()
     self.sheetView:level(hs.drawing.windowLevels.tornOffMenu)
     self:setPosition("top")
     self.sheetView:hide()
+
+    local frame = hs.geometry.rect(100, 100, 800, 600) -- Define the webview frame
+
+    -- Create the webview
+    local webview = hs.webview.new(frame):url("https://www.example.com")
+    webview:show()
 end
 
 function obj:setPosition(position)
@@ -223,8 +229,6 @@ function obj:setPosition(position)
 end
 
 function obj:bindHotkeys(mappings)
-    print("aaaaaaaaaaaaaa")
-
     for i, entry in ipairs(mappings) do
         print("i is: ", i)
         print("File: ", entry.file)

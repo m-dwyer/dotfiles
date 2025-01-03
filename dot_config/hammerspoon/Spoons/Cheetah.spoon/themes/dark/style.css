@@ -31,6 +31,8 @@ footer hr {
 .title {
     padding: 10px 20px;
     font-size: 18px;
+    MARGIN
+    /* width: 50%; */
 }
 
 li.title {
@@ -68,7 +70,7 @@ ul, li {
 }
 
 .content > .col {
-  width: 25%;
+  /* width: 25%; */
   padding:10px 0 10px 10px;
   float:left;
 }
@@ -84,7 +86,7 @@ li:after {
 }
 
 .cmdModifiers {
-  width: 40px;
+  /* width: 40px; */
   padding-right: 15px;
   text-align: right;
   float: left;
@@ -92,7 +94,7 @@ li:after {
 }
 
 .cmdtext {
-    width: 120px;
+    /* width: 120px; */
     float: left;
     text-align: left;
     overflow: hidden;
