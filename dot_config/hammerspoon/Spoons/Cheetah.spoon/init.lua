@@ -214,10 +214,6 @@ function obj:init()
     self.sheetView:hide()
 
     local frame = hs.geometry.rect(100, 100, 800, 600) -- Define the webview frame
-
-    -- Create the webview
-    local webview = hs.webview.new(frame):url("https://www.example.com")
-    webview:show()
 end
 
 function obj:setPosition(position)
