@@ -30,3 +30,15 @@ spoon.Cheetah:bindHotkeys({
    toggle = { { "cmd", "shift" }, "H" }
 }
 })
+
+local yabaiPath = "/opt/homebrew/bin/yabai"
+local opacity = "0.0"
+-- Bind hotkey to hide Mac menubar using Yabai
+hs.hotkey.bind({ "cmd", "shift" }, "B", function()
+   if opacity == "0.0" then
+      opacity = "1.0"
+   else
+      opacity = "0.0"
+   end
+   hs.task.new(yabaiPath, function() end, {"-m", "config", "menubar_opacity", opacity}):start()
+end)
