@@ -73,21 +73,107 @@ local function meetings_collapse_details()
     })
 end
 
-local function fetch_meetings(_)
+local function stringify_block(block)
+    local note_str = ""
+    for i, line in ipairs(block) do
+        note_str = note_str .. line .. "\r\n"
+    end
+
+    return note_str
+end
+
+local function find_meeting_link(input)
+    local link = nil
+    for i, link_regex in ipairs(expected_meeting_links) do
+        link = string.match(input, link_regex)
+        if link then
+            break
+        end
+    end
+
+    return link
+end
+
+local function parse_calendar_new(input)
+    print("getting cal events")
+    print("input is: " .. input)
+    local lines = {}
+    for line in input:gmatch("[^\r\n]+") do
+        table.insert(lines, line)
+    end
+
+    local sep = "|"
+
+    local result = {}
+    for i, line in ipairs(lines) do
+        local line_split = {}
+        local idx = 1
+        for str in string.gmatch(line, "([^"..sep.."]+)") do
+            table.insert(line_split, idx, str)
+            idx = idx + 1
+        end
+
+        local eventSummary = line_split[1]
+        local eventStart = line_split[2]
+        local eventEnd = line_split[3]
+        local eventNote = line_split[4]
+
+        table.insert(result, {summary = eventSummary, startDate = eventStart, endDate = eventEnd, note = eventNote, link = find_meeting_link(eventNote)})
+    end
+
+    for i, event in ipairs(result) do
+        print("i = " .. i)
+        print("event summary: " .. event.summary)
+        print("event start date: " .. event.startDate or "")
+        print("event end date: " .. event.endDate)
+        print("event note: " .. event.note)
+    end
+
+    return result
+end
+
+local function fetch_meetings_new(_)
+sql=[=[
+  SELECT * FROM users WHERE username='$username';
+]=]
+
+    local calendar_script=[=[
+sqlite3 ~/Library/Group\ Containers/group.com.apple.calendar/Calendar.sqlitedb << EOF
+.mode list
+.separator |
+SELECT
+  ci.summary AS summary,
+  DateTime(ci.start_date + 978307200, 'unixepoch', 'localtime') as start_date,
+  DateTime(ci.end_date + 978307200, 'unixepoch', 'localtime') as end_date,
+  REPLACE(REPLACE(ci.description, CHAR(13), '\r'), CHAR(10), '\n') as notes,
+  c.title as title
+FROM
+  Calendar c
+JOIN
+  CalendarItem ci ON c.rowid = ci.calendar_id
+WHERE
+  c.title = '${calendar_name}'
+ORDER BY
+  start_date;
+EOF
+    ]=]
+
+    vars = {calendar_name = calendar_name}
+    calendar_script = (calendar_script:gsub('($%b{})', function(w)
+        return vars[w:sub(3, -2)] or w
+      end))
+
     print("fetching meetings..")
     sbar.remove('/meetings.meeting\\.*/')
-    sbar.exec("icalBuddy -nc -b '' -ic '" .. calendar_name .. "' -iep 'title,datetime,notes' -po 'title,datetime,notes' -ps '/;;/' -ea eventsToday", function(info)
-        local parsed_data = parse_calendar(info)
+    sbar.exec(calendar_script, function(info)
+        print("---------------- output ------:")
+        print(info)
+        local parsed_data = parse_calendar_new(info)
         local counter = 0
         for i, entry in ipairs(parsed_data) do
-            -- print("Event title:", entry.title)
-            -- print("\tEvent time: ", entry.time or "")
-            -- print("\tEvent note:", entry.note or "")
-            -- print("\tEvent link: ", entry.link or "")
-
             if counter == 0 then
                 meetings:set({
-                    label = string.sub(entry.title, 1, 15)
+                    label = string.sub(entry.summary, 1, 15)
                 })
             end
 
@@ -96,7 +182,7 @@ local function fetch_meetings(_)
                 width = "dynamic",
                 align = "center",
                 label = {
-                    string = string.sub(entry.title, 1, 15) .. " " .. (entry.time or ""):gsub("[^%w:-]", ""),
+                    string = (entry.startDate or "") .. " " .. string.sub(entry.summary, 1, 15),
                     width = "dynamic"
                 }
             })
@@ -122,94 +208,19 @@ local function meetings_toggle_details(env)
                 drawing = true
             }
         })
-        fetch_meetings()
+        fetch_meetings_new()
     else
         meetings_collapse_details()
     end
 end
 
-local function stringify_block(block)
-    local note_str = ""
-    for i, line in ipairs(block) do
-        note_str = note_str .. line .. "\r\n"
-    end
-
-    return note_str
-end
-
-local function find_meeting_link(input)
-    local link = nil
-    for i, link_regex in ipairs(expected_meeting_links) do
-        link = string.match(input, link_regex)
-        if link then
-            break
-        end
-    end
-
-    return link
-end
-
-function parse_calendar(input_string)
-    local lines = {}
-    for line in input_string:gmatch("[^\r\n]+") do
-        table.insert(lines, line)
-    end
-
-    local result = {}
-    local current_block = {}
-
-    local isNote = false
-
-    local eventTitle = nil
-    local eventTime = nil
-    local eventNote = nil
-
-    for i, line in ipairs(lines) do
-        if isNote and line:match("^%s") then
-            table.insert(current_block, line)
-        else
-            if isNote then
-                local note_str = stringify_block(current_block)
-                table.insert(result, {title = eventTitle, time = eventTime, note = note_str, link = find_meeting_link(note_str)})
-                isNote = false
-                current_block = {}
-            end
-
-            local t = {}
-            local sep = ";;"
-            for str in string.gmatch(line, "([^"..sep.."]+)") do
-                table.insert(t, str)
-            end
-
-            eventTitle = t[1] or nil
-            eventTime = t[2] or nil
-            eventNote = t[3] or nil
-
-            if eventNote then
-                isNote = true
-                table.insert(current_block, eventNote)
-            end
-
-            if i == #lines or not t[3] then
-                local note_str = ""
-                for i, line in ipairs(current_block) do
-                    note_str = note_str .. line .. "\r\n"
-                end
-                table.insert(result, {title = eventTitle, time = eventTime, note = note_str, link = find_meeting_link(note_str)})
-            end
-        end
-    end
-
-    return result
-end
-
 local meeting_watcher = sbar.add("item", {update_freq = 60})
 meeting_watcher:subscribe("routine", function()
-    fetch_meetings()
+    fetch_meetings_new()
 end)
 
 meetings:subscribe("mouse.clicked", meetings_toggle_details)
 meetings:subscribe("mouse.exited.global", meetings_collapse_details)
 
 -- Initial populate on load
-fetch_meetings()
+fetch_meetings_new()
