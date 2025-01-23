@@ -175,12 +175,12 @@ EOF
 
             if entry.startDate then
                 local start_date = os.date("*t", parse_datetime(entry.startDate))
-                meeting_range = meeting_range .. start_date.hour .. ":" .. start_date.min
+                meeting_range = meeting_range .. string.format("%02d",start_date.hour) .. ":" .. string.format("%02d",start_date.min)
             end
 
             if entry.endDate then
                 local end_date = os.date("*t", parse_datetime(entry.endDate))
-                meeting_range = meeting_range .. "-" .. end_date.hour .. ":" .. end_date.min
+                meeting_range = meeting_range .. "-" .. string.format("%02d",end_date.hour) .. ":" .. string.format("%02d", end_date.min)
             end
 
             local meeting = sbar.add("item", "meetings.meeting." .. i, {
