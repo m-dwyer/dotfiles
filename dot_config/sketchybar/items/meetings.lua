@@ -1,56 +1,39 @@
 local settings = require("settings")
 local colors = require("colors")
 
+-- Widget configuration
 local calendar_name = "Home"
+local calendar_db = os.getenv("HOME") .. "/Library/Group\\ Containers/group.com.apple.calendar/Calendar.sqlitedb"
+local calendar_refresh = 180
 
 local expected_meeting_links = {
     "https://meet.google.com/[%w%-]+[%w%-]+[%w%-]+",
     "https://[%w]+.zoom.us/j/[%w]+"
 }
 
-local popup_width = 100
-
 local meetings = sbar.add("item", "widgets.meetings", {
+    position = "right",
     icon = {
-        color = colors.white,
-        padding_left = 8,
         font = {
-            size = 22.0
+            style = settings.font.style_map["Regular"],
+            size = 19.0
         }
     },
     label = {
-        color = colors.white,
-        padding_right = 8,
-        width = popup_width,
-        align = "right",
         font = {
-            family = settings.icons
-        }
+            family = settings.font.numbers
+        },
+        max_chars = 15,
+        scroll_texts = "off",
     },
-    position = "right",
-    width =  "dynamic",
-    update_freq = 30,
-    padding_left = 1,
-    padding_right = 1,
     background = {
         color = colors.bg2,
         border_color = colors.rainbow[#colors.rainbow],
         border_width = 1
     },
+    update_freq = calendar_refresh,
     popup = {
         align = "center"
-    }
-})
-
-local meetings_bracket = sbar.add("bracket", "widgets.meetings.bracket",{ meetings.name }, {
-    background = {
-        color = colors.bg1,
-        border_color = colors.rainbow[#colors.rainbow - 3],
-        border_width = 1
-    },
-    popup = {
-        align = "center",
-        drawing = false
     }
 })
 
@@ -59,28 +42,6 @@ sbar.add("item", {
     position = "right",
     width = settings.group_paddings
 })
-
-local function meetings_collapse_details()
-    local drawing = meetings_bracket:query().popup.drawing == "on"
-    if not drawing then
-        return
-    end
-
-    meetings_bracket:set({
-        popup = {
-            drawing = false
-        }
-    })
-end
-
-local function stringify_block(block)
-    local note_str = ""
-    for i, line in ipairs(block) do
-        note_str = note_str .. line .. "\r\n"
-    end
-
-    return note_str
-end
 
 local function find_meeting_link(input)
     local link = nil
@@ -94,9 +55,7 @@ local function find_meeting_link(input)
     return link
 end
 
-local function parse_calendar_new(input)
-    print("getting cal events")
-    print("input is: " .. input)
+local function parse_calendar(input)
     local lines = {}
     for line in input:gmatch("[^\r\n]+") do
         table.insert(lines, line)
@@ -121,24 +80,51 @@ local function parse_calendar_new(input)
         table.insert(result, {summary = eventSummary, startDate = eventStart, endDate = eventEnd, note = eventNote, link = find_meeting_link(eventNote)})
     end
 
-    for i, event in ipairs(result) do
-        print("i = " .. i)
-        print("event summary: " .. event.summary)
-        print("event start date: " .. event.startDate or "")
-        print("event end date: " .. event.endDate)
-        print("event note: " .. event.note)
-    end
-
     return result
 end
 
-local function fetch_meetings_new(_)
-sql=[=[
-  SELECT * FROM users WHERE username='$username';
-]=]
+local function parse_datetime(datetime)
+    local year, month, day, hour, min, sec = datetime:match("(%d+)-(%d+)-(%d+) (%d+):(%d+):(%d+)")
+    local parsed_datetime = os.time({
+        year = tonumber(year),
+        month = tonumber(month),
+        day = tonumber(day),
+        hour = tonumber(hour),
+        min = tonumber(min),
+        sec = tonumber(sec),
+    })
 
+    return parsed_datetime
+end
+
+local function calculate_time_until(datetime)
+    local parsed_datetime = parse_datetime(datetime)
+
+    -- Get the current time
+    local current_time = os.time()
+
+    -- Calculate the difference in seconds
+    local diff_seconds = os.difftime(parsed_datetime, current_time)
+
+    -- Convert the difference to minutes
+    local diff_minutes = diff_seconds / 60
+    local diff_hours = diff_minutes / 60
+
+    local time_until = ""
+    if diff_hours >= 1 then
+        time_until = math.tointeger(math.floor(diff_hours+0.5)) .. " hr"
+    elseif diff_minutes > 0 then
+        time_until = math.tointeger(math.ceil(diff_minutes+0.5))  .. " min"
+    else
+        time_until = "now"
+    end
+
+    return time_until
+end
+
+local function fetch_meetings(_)
     local calendar_script=[=[
-sqlite3 ~/Library/Group\ Containers/group.com.apple.calendar/Calendar.sqlitedb << EOF
+sqlite3 ${calendar_db} << EOF
 .mode list
 .separator |
 SELECT
@@ -153,45 +139,79 @@ JOIN
   CalendarItem ci ON c.rowid = ci.calendar_id
 WHERE
   c.title = '${calendar_name}'
+  AND (
+    -- Include ongoing events
+    (DateTime(ci.start_date + 978307200, 'unixepoch') <= DateTime('now')
+     AND DateTime(ci.end_date + 978307200, 'unixepoch') >= DateTime('now'))
+    OR
+    -- Include events starting later today
+    (DateTime(ci.start_date + 978307200, 'unixepoch') >= DateTime('now')
+     AND DateTime(ci.start_date + 978307200, 'unixepoch') < DateTime('now', '+1 day', 'start of day'))
+  )
 ORDER BY
-  start_date;
+  ci.start_date;
 EOF
     ]=]
 
-    vars = {calendar_name = calendar_name}
+    vars = {calendar_db = calendar_db, calendar_name = calendar_name}
     calendar_script = (calendar_script:gsub('($%b{})', function(w)
         return vars[w:sub(3, -2)] or w
       end))
 
-    print("fetching meetings..")
     sbar.remove('/meetings.meeting\\.*/')
     sbar.exec(calendar_script, function(info)
-        print("---------------- output ------:")
-        print(info)
-        local parsed_data = parse_calendar_new(info)
+        local parsed_data = parse_calendar(info)
         local counter = 0
         for i, entry in ipairs(parsed_data) do
             if counter == 0 then
                 meetings:set({
-                    label = string.sub(entry.summary, 1, 15)
+                    label = {
+                        string = entry.summary .. " (" .. calculate_time_until(entry.startDate) .. ")"
+                    }
                 })
             end
 
+            local meeting_range = ""
+
+            if entry.startDate then
+                local start_date = os.date("*t", parse_datetime(entry.startDate))
+                meeting_range = meeting_range .. start_date.hour .. ":" .. start_date.min
+            end
+
+            if entry.endDate then
+                local end_date = os.date("*t", parse_datetime(entry.endDate))
+                meeting_range = meeting_range .. "-" .. end_date.hour .. ":" .. end_date.min
+            end
+
             local meeting = sbar.add("item", "meetings.meeting." .. i, {
-                position = "popup." .. meetings_bracket.name,
-                width = "dynamic",
+                position = "popup." .. meetings.name,
+                scroll_texts = "off",
+                width = 200,
                 align = "center",
                 label = {
-                    string = (entry.startDate or "") .. " " .. string.sub(entry.summary, 1, 15),
-                    width = "dynamic"
+                    string = meeting_range .. " " .. entry.summary,
+                    -- width = "dynamic"
+                    max_chars = 25,
                 }
             })
+
+            meeting:subscribe("mouse.entered", function(env)
+                meeting:set({
+                    scroll_texts = "on"
+                })
+            end)
 
             if entry.link then
                 meeting:set({
                     click_script = "open " .. entry.link
                 })
-                meeting:subscribe("mouse.clicked", meetings_collapse_details)
+                meeting:subscribe("mouse.clicked", function(env)
+                    meetings:set({
+                        popup = {
+                            drawing = "toggle"
+                        }
+                    })
+                end)
             end
 
             counter = counter + 1
@@ -199,45 +219,50 @@ EOF
     end)
 end
 
-local function meetings_toggle_details(env)
-    local should_draw = meetings_bracket:query().popup.drawing == "off"
-
-    if should_draw then
-        meetings_bracket:set({
-            popup = {
-                drawing = true
-            }
-        })
-        fetch_meetings_new()
-    else
-        meetings_collapse_details()
-    end
-end
-
-local interrupt = 0
-local function animate_detail(detail)
-    sbar.animate("tanh", 30, function()
-        meetings:set({
-            label = {
-                width = detail and "dynamic" or 0
-            }
-        })
-    end)
-end
-
-local meeting_watcher = sbar.add("item", {update_freq = 60})
+local meeting_watcher = sbar.add("item", {update_freq = calendar_refresh})
 meeting_watcher:subscribe("routine", function()
-    fetch_meetings_new()
+    fetch_meetings()
 end)
 
-meetings:subscribe("mouse.clicked", meetings_toggle_details)
-meetings:subscribe("mouse.exited.global", meetings_collapse_details)
+meetings:subscribe("mouse.clicked", function(env)
+    local drawing = meetings:query().popup.drawing
+    meetings:set({
+        popup = {
+            drawing = "toggle"
+        }
+    })
+
+    if drawing == "off" then
+        fetch_meetings()
+    end
+end)
+
+meetings:subscribe("mouse.exited.global", function(env)
+    meetings:set({
+        popup = {
+            drawing = "toggle"
+        }
+    })
+end)
 
 meetings:subscribe("mouse.entered", function(env)
-    animate_detail(true)
-    interrupt = interrupt + 1
-    sbar.delay(5, animate_detail)
+    meetings:set({
+        label = {
+            scroll_texts = "on",
+            scroll_duration = 50,
+            max_chars = 15
+        }
+    })
+end)
+
+meetings:subscribe("mouse.exited", function(env)
+    meetings:set({
+        label = {
+            scroll_texts = "off",
+            max_chars = 15
+        }
+    })
 end)
 
 -- Initial populate on load
-fetch_meetings_new()
+fetch_meetings()
