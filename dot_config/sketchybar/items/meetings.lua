@@ -214,6 +214,17 @@ local function meetings_toggle_details(env)
     end
 end
 
+local interrupt = 0
+local function animate_detail(detail)
+    sbar.animate("tanh", 30, function()
+        meetings:set({
+            label = {
+                width = detail and "dynamic" or 0
+            }
+        })
+    end)
+end
+
 local meeting_watcher = sbar.add("item", {update_freq = 60})
 meeting_watcher:subscribe("routine", function()
     fetch_meetings_new()
@@ -221,6 +232,12 @@ end)
 
 meetings:subscribe("mouse.clicked", meetings_toggle_details)
 meetings:subscribe("mouse.exited.global", meetings_collapse_details)
+
+meetings:subscribe("mouse.entered", function(env)
+    animate_detail(true)
+    interrupt = interrupt + 1
+    sbar.delay(5, animate_detail)
+end)
 
 -- Initial populate on load
 fetch_meetings_new()
