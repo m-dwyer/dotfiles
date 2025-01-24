@@ -75,9 +75,10 @@ local function parse_calendar(input)
         local eventSummary = line_split[1]
         local eventStart = line_split[2]
         local eventEnd = line_split[3]
-        local eventNote = line_split[4]
+        local eventAllDay = line_split[4]
+        local eventNote = line_split[5]
 
-        table.insert(result, {summary = eventSummary, startDate = eventStart, endDate = eventEnd, note = eventNote, link = find_meeting_link(eventNote)})
+        table.insert(result, {summary = eventSummary, startDate = eventStart, endDate = eventEnd, allDay = eventAllDay, note = eventNote, link = find_meeting_link(eventNote)})
     end
 
     return result
@@ -131,6 +132,12 @@ SELECT
   ci.summary AS summary,
   DateTime(ci.start_date + 978307200, 'unixepoch', 'localtime') as start_date,
   DateTime(ci.end_date + 978307200, 'unixepoch', 'localtime') as end_date,
+  CASE
+    WHEN strftime('%H:%M:%S', DateTime(ci.start_date + 978307200, 'unixepoch')) = '00:00:00'
+      AND strftime('%H:%M:%S', DateTime(ci.end_date + 978307200, 'unixepoch')) = '23:59:59'
+    THEN 'true'
+    ELSE 'false'
+  END AS all_day,
   REPLACE(REPLACE(ci.description, CHAR(13), '\r'), CHAR(10), '\n') as notes,
   c.title as title
 FROM
@@ -141,15 +148,16 @@ WHERE
   c.title = '${calendar_name}'
   AND (
     -- Include ongoing events
-    (DateTime(ci.start_date + 978307200, 'unixepoch') <= DateTime('now')
-     AND DateTime(ci.end_date + 978307200, 'unixepoch') >= DateTime('now'))
+    (DateTime(ci.start_date + 978307200, 'unixepoch', 'localtime') <= DateTime('now', 'localtime')
+     AND DateTime(ci.end_date + 978307200, 'unixepoch', 'localtime') >= DateTime('now', 'localtime'))
     OR
     -- Include events starting later today
-    (DateTime(ci.start_date + 978307200, 'unixepoch') >= DateTime('now')
-     AND DateTime(ci.start_date + 978307200, 'unixepoch') < DateTime('now', '+1 day', 'start of day'))
+    (DateTime(ci.start_date + 978307200, 'unixepoch', 'localtime') >= DateTime('now', 'localtime')
+     AND DateTime(ci.start_date + 978307200, 'unixepoch', 'localtime') < DateTime('now', 'localtime', '+1 day', 'start of day'))
   )
 ORDER BY
-  ci.start_date;
+  ci.start_date
+DESC;
 EOF
     ]=]
 
@@ -172,15 +180,19 @@ EOF
             end
 
             local meeting_range = ""
+            if entry.allDay == "false" then
+                print("adding meeting ranges..")
+                if entry.startDate then
+                    local start_date = os.date("*t", parse_datetime(entry.startDate))
+                    meeting_range = meeting_range .. string.format("%02d",start_date.hour) .. ":" .. string.format("%02d",start_date.min)
+                end
 
-            if entry.startDate then
-                local start_date = os.date("*t", parse_datetime(entry.startDate))
-                meeting_range = meeting_range .. string.format("%02d",start_date.hour) .. ":" .. string.format("%02d",start_date.min)
-            end
+                if entry.endDate then
+                    local end_date = os.date("*t", parse_datetime(entry.endDate))
+                    meeting_range = meeting_range .. "-" .. string.format("%02d",end_date.hour) .. ":" .. string.format("%02d", end_date.min)
+                end
 
-            if entry.endDate then
-                local end_date = os.date("*t", parse_datetime(entry.endDate))
-                meeting_range = meeting_range .. "-" .. string.format("%02d",end_date.hour) .. ":" .. string.format("%02d", end_date.min)
+                meeting_range = meeting_range .. " "
             end
 
             local meeting = sbar.add("item", "meetings.meeting." .. i, {
@@ -189,7 +201,7 @@ EOF
                 width = 200,
                 align = "center",
                 label = {
-                    string = meeting_range .. " " .. entry.summary,
+                    string = meeting_range .. entry.summary,
                     -- width = "dynamic"
                     max_chars = 25,
                 }
