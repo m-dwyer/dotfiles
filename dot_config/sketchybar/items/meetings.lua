@@ -57,17 +57,18 @@ end
 
 local function parse_calendar(input)
     local lines = {}
+    local idx = 1
     for line in input:gmatch("[^\r\n]+") do
-        table.insert(lines, line)
+        table.insert(lines, idx, line)
     end
 
     local sep = "|"
 
     local result = {}
-    for i, line in ipairs(lines) do
+    for i = 1, #lines do
         local line_split = {}
         local idx = 1
-        for str in string.gmatch(line, "([^"..sep.."]+)") do
+        for str in string.gmatch(lines[i], "([^"..sep.."]+)") do
             table.insert(line_split, idx, str)
             idx = idx + 1
         end
@@ -156,8 +157,8 @@ WHERE
      AND DateTime(ci.start_date + 978307200, 'unixepoch', 'localtime') < DateTime('now', 'localtime', '+1 day', 'start of day'))
   )
 ORDER BY
-  ci.start_date
-DESC;
+ DateTime(ci.start_date)
+ASC;
 EOF
     ]=]
 
@@ -181,7 +182,6 @@ EOF
 
             local meeting_range = ""
             if entry.allDay == "false" then
-                print("adding meeting ranges..")
                 if entry.startDate then
                     local start_date = os.date("*t", parse_datetime(entry.startDate))
                     meeting_range = meeting_range .. string.format("%02d",start_date.hour) .. ":" .. string.format("%02d",start_date.min)
