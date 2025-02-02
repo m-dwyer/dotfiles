@@ -1,1 +1,9 @@
 theme = catppuccin-mocha
+
+# macOS specific features
+macos-titlebar-style = tabs
+macos-option-as-alt = true
+window-save-state = always
+window-vsync = true
+window-colorspace = display-p3
+quick-terminal-screen = macos-menu-bar
