@@ -7,3 +7,4 @@ window-save-state = always
 window-vsync = true
 window-colorspace = display-p3
 quick-terminal-screen = macos-menu-bar
+title = " "
