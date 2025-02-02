@@ -1,4 +1,4 @@
-local colors = require("colors")
+local colors = require("colors-cat")
 local icons = require("icons")
 
 -- Handles the small icon indicator for spaces / menus changes

@@ -1,25 +1,25 @@
-local colors = require("colors")
-local icons = require("icons")
-local settings = require("settings")
+local colors = require("colors-cat")
+local icons = require("icons-cat")
+local settings = require("settings-cat")
 
 local apple = sbar.add("item", {
     icon = {
         font = {
-            size = 20.0
+            family = settings.font.text,
+            size = 16.0
         },
-        string = settings.modes.main.icon,
-        padding_right = 8,
-        padding_left = 8,
-        highlight_color = settings.modes.service.color
+        string = icons.apple,
+        padding_right = 15,
+        color = colors.green,
     },
     label = {
         drawing = false
     },
-    background = {
-        color = settings.items.colors.background,
-        border_color = settings.modes.main.color,
-        border_width = 1
-    },
+    -- background = {
+    --     color = settings.items.colors.background,
+    --     border_color = settings.modes.main.color,
+    --     border_width = 1
+    -- },
 
     padding_left = 1,
     padding_right = 1,
