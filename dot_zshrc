@@ -1,0 +1,15 @@
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+# Added by OrbStack: command-line tools and integration
+source ~/.orbstack/shell/init.zsh 2>/dev/null || :
+
+alias code="code-insiders"
+alias ls="lsd"
+alias fd="fd --ignore"
+alias cat="bat"
+
+export OBSIDIAN_VAULT="$HOME/Documents/vault"
+eval "$(/opt/homebrew/bin/mise activate zsh)"
+
+eval "$(zoxide init zsh)"
+
