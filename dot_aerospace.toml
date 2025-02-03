@@ -10,7 +10,7 @@ after-login-command = []
 # 'after-startup-command' is run after 'after-login-command'
 # Available commands : https://nikitabobko.github.io/AeroSpace/commands
 after-startup-command = [
-  'exec-and-forget borders active_color=0xe4ff6fcf inactive_color=0xff494d64 width=4.0'
+  'exec-and-forget borders active_color=0xffcad3f5 inactive_color=0xbb282E44 width=4.0'
 ]
 
 # Notify Sketchybar about workspace change
@@ -19,7 +19,7 @@ exec-on-workspace-change = ['/bin/bash', '-c',
 ]
 
 # Start AeroSpace at login
-start-at-login = false
+start-at-login = true
 
 # Normalizations. See: https://nikitabobko.github.io/AeroSpace/guide#normalization
 enable-normalization-flatten-containers = true
@@ -67,7 +67,7 @@ inner.horizontal = 2
 inner.vertical =   2
 outer.left =       4
 outer.bottom =     4
-outer.top =        4
+outer.top =        10
 outer.right =      4
 
 # 'main' binding mode declaration
@@ -204,8 +204,15 @@ run = 'move-node-to-workspace 4'
 
 # Workspace - Terminal
 [[on-window-detected]]
-if.app-id = 'com.googlecode.iterm2'
-run = 'move-node-to-workspace 5'
+if.app-id = "com.mitchellh.ghostty"
+run = [
+  # FIX: this is a workaround for https://github.com/nikitabobko/AeroSpace/issues/68
+  # this was also observed in:
+  # - https://github.com/ghostty-org/ghostty/issues/1840
+  # - https://github.com/ghostty-org/ghostty/issues/2006
+  "layout floating",
+  "move-node-to-workspace 5",
+]
 
 # Workspace - Productivity
 [[on-window-detected]]
