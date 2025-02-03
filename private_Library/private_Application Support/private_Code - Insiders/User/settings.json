@@ -1,0 +1,34 @@
+{
+  "window.zoomLevel": 1,
+  "security.promptForLocalFileProtocolHandling": false,
+  "editor.fontFamily": "Menlo, Monaco, 'Courier New', 'SF Pro', monospace",
+  // we try to make semantic highlighting look good
+  "editor.semanticHighlighting.enabled": true,
+  // prevent VSCode from modifying the terminal colors
+  "terminal.integrated.minimumContrastRatio": 1,
+  // make the window's titlebar use the workbench colors
+  "window.titleBarStyle": "custom",
+  // applicable if you use Go, this is an opt-in flag!
+  "gopls": {
+    "ui.semanticTokens": true,
+  },
+  // use Mocha as the base
+  "workbench.colorTheme": "Catppuccin Macchiato",
+  // pink as the accent color
+  "catppuccin.accentColor": "pink",
+  // make Mocha specifically very dark
+  // (this preserves other flavors!)
+  "catppuccin.colorOverrides": {
+    "mocha": {
+      "base": "#000000",
+      "mantle": "#010101",
+      "crust": "#020202",
+    },
+  },
+  // use your accent (pink) on the statusBar as well
+  "catppuccin.customUIColors": {
+    "mocha": {
+      "statusBar.foreground": "accent",
+    },
+  },
+}
