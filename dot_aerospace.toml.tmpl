@@ -1,0 +1,5 @@
+{{- if eq .chezmoi.hostname "ems-macbook-pro" }}
+{{ template "dot_aerospace_home.toml.tmpl" . }}
+{{ else }}
+{{ template "dot_aerospace_work.toml.tmpl" . }}
+{{ end }}
