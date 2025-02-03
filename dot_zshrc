@@ -4,9 +4,10 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 source ~/.orbstack/shell/init.zsh 2>/dev/null || :
 
 alias code="code-insiders"
-alias ls="lsd"
+alias ls="lsd --color=always"
 alias fd="fd --ignore"
 alias cat="bat"
+alias less="less -RFX"
 
 export OBSIDIAN_VAULT="$HOME/Documents/vault"
 eval "$(/opt/homebrew/bin/mise activate zsh)"
