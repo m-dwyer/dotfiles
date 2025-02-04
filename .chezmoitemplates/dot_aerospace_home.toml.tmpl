@@ -65,10 +65,10 @@ preset = 'qwerty'
 [gaps]
 inner.horizontal = 2
 inner.vertical =   2
-outer.left =       4
-outer.bottom =     4
-outer.top =        10
-outer.right =      4
+outer.left =       8
+outer.bottom =     8
+outer.top =        [{ monitor."^Built-in Retina Display$" = 4 }, 40]
+outer.right =      8
 
 # 'main' binding mode declaration
 # See: https://nikitabobko.github.io/AeroSpace/guide#binding-modes
@@ -148,6 +148,10 @@ alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
 
 # See: https://nikitabobko.github.io/AeroSpace/commands#mode
 alt-shift-semicolon = 'mode service'
+
+# Emulate previous/next space but move between workspaces
+ctrl-shift-left = 'workspace prev'
+ctrl-shift-right = 'workspace next'
 
 # 'service' binding mode declaration.
 # See: https://nikitabobko.github.io/AeroSpace/guide#binding-modes
