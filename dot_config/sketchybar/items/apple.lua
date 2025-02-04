@@ -10,7 +10,7 @@ local apple = sbar.add("item", {
         },
         string = icons.apple,
         padding_right = 15,
-        color = colors.green,
+        color = colors.pink,
     },
     label = {
         drawing = false
