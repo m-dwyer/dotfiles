@@ -31,4 +31,5 @@ brew "lazydocker"
 brew "yazi"
 brew "mediainfo"
 brew "spicetify-cli"
+brew "bat"
 EOF
