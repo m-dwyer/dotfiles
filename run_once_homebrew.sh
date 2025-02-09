@@ -2,35 +2,51 @@
 
 # Install required packages
 brew bundle --no-lock --file=/dev/stdin <<EOF
-tap "felixkratz/formulae"
+
 tap "homebrew/bundle"
 tap "homebrew/services"
+
+# Util
+brew "chezmoi"
+
+# Desktop
+tap "felixkratz/formulae"
 tap "nikitabobko/tap"
 tap "koekeishiya/formulae"
 brew "yabai"
-brew "chezmoi"
 brew "lua"
-brew "nowplaying-cli"
-brew "switchaudio-osx"
 brew "felixkratz/formulae/borders"
 brew "felixkratz/formulae/sketchybar"
 cask "aerospace"
+cask "hammerspoon"
+
+brew "nowplaying-cli"
+brew "switchaudio-osx"
+
+# File Management
+brew "yazi"
+brew "mediainfo"
+brew "zoxide"
+brew "ripgrep"
+brew "fzf"
+
+# Media
+brew "spicetify-cli"
+
+# Fonts
 cask "font-fira-code-nerd-font"
 cask "font-hack-nerd-font"
 cask "font-sf-pro"
 cask "font-space-mono-nerd-font"
-cask "hammerspoon"
-brew "zoxide"
+
+# Tools
 brew "btop"
 brew "difftastic"
 brew "gdu"
-brew "ripgrep"
-brew "fzf"
 brew "lazydocker"
-brew "yazi"
-brew "mediainfo"
-brew "spicetify-cli"
 brew "bat"
+brew "xh"
+brew "posting"
 EOF
 
 # Download zimfw plugin manager if missing.
