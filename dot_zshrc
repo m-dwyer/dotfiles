@@ -4,13 +4,30 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 source ~/.orbstack/shell/init.zsh 2>/dev/null || :
 
 alias code="code-insiders"
-alias ls="lsd --color=always"
 alias fd="fd --ignore"
 alias cat="bat"
 alias less="less -RFX"
+alias ls="l"
+
+# Eza
+alias l="eza -l --icons --git -a"
+alias lt="eza --tree --level=2 --long --icons --git"
+alias ltree="eza --tree --level=2  --icons --git"
 
 export OBSIDIAN_VAULT="$HOME/Documents/vault"
-eval "$(/opt/homebrew/bin/mise activate zsh)"
+export ZDOTDIR=~/.config/zsh
 
+
+ZIM_HOME=~/.zim
+
+# Install missing modules, and update ${ZIM_HOME}/init.zsh if missing or outdated.
+if [[ ! ${ZIM_HOME}/init.zsh -nt ${ZDOTDIR:-${HOME}}/.zimrc ]]; then
+  source ${ZIM_HOME}/zimfw.zsh init -q
+fi
+
+autoload -U compinit; compinit
+source ${ZIM_HOME}/init.zsh
+
+eval "$(/opt/homebrew/bin/mise activate zsh)"
 eval "$(zoxide init zsh)"
 
