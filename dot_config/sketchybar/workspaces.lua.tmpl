@@ -1,0 +1,5 @@
+{{- if eq .chezmoi.hostname "ems-macbook-pro" }}
+{{ template "home-workspaces.lua.tmpl" . }}
+{{ else }}
+{{ template "work-workspaces.lua.tmpl" . }}
+{{ end }}

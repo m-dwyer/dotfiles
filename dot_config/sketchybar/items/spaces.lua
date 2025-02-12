@@ -3,6 +3,8 @@ local icons = require("icons")
 local settings = require("settings-cat")
 -- local app_icons = require("helpers.app_icons")
 
+local workspacesConfig = require("workspaces")
+
 local spaces = {}
 local workspaces = {
   ["1"] = { icon = "1", name = "Web" },
@@ -14,8 +16,8 @@ local workspaces = {
   ["7"] = { icon = "7", name = "Misc" },
 }
 
--- Display order of workspaces
-local workspaceOrder = { "1", "2", "3", "4", "5", "6", "7" }
+local workspaces = workspacesConfig.workspaces
+local workspaceOrder = workspacesConfig.order
 
 local current_workspace = get_current_workspace()
 
