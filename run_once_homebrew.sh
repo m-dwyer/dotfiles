@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Install required packages
 brew bundle --no-lock --file=/dev/stdin <<EOF
@@ -40,6 +40,7 @@ cask "font-sf-pro"
 cask "font-space-mono-nerd-font"
 
 # Tools
+cask "wezterm"
 brew "wezterm"
 brew "btop"
 brew "difftastic"
