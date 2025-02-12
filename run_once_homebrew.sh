@@ -42,6 +42,7 @@ cask "font-space-mono-nerd-font"
 # Tools
 cask "wezterm"
 brew "wezterm"
+brew "starship"
 brew "btop"
 brew "difftastic"
 brew "gdu"

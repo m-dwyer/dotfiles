@@ -1,4 +1,6 @@
 eval "$(/opt/homebrew/bin/brew shellenv)"
+eval "$(starship init zsh)"
+export STARSHIP_CONFIG=~/.config/starship/starship.toml
 
 # Added by OrbStack: command-line tools and integration
 source ~/.orbstack/shell/init.zsh 2>/dev/null || :
@@ -13,6 +15,9 @@ alias ls="l"
 alias l="eza -l --icons --git -a"
 alias lt="eza --tree --level=2 --long --icons --git"
 alias ltree="eza --tree --level=2  --icons --git"
+
+# Chezmoi
+alias chezcd="cd $(chezmoi source-path)"
 
 # Git
 alias gc="git commit -m"
