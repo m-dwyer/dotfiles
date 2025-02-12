@@ -40,6 +40,7 @@ cask "font-sf-pro"
 cask "font-space-mono-nerd-font"
 
 # Tools
+brew "wezterm"
 brew "btop"
 brew "difftastic"
 brew "gdu"
