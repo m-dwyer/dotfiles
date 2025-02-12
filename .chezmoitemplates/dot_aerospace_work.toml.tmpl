@@ -189,23 +189,10 @@ run = 'move-node-to-workspace 2'
 if.app-id = 'com.microsoft.VSCodeInsiders'
 run = 'move-node-to-workspace 3'
 
-# Workspace 4 - Terminal
-[[on-window-detected]]
-if.app-id = 'com.googlecode.iterm2'
-run = 'move-node-to-workspace 4'
-
 # Workspace - Terminal
 [[on-window-detected]]
-if.app-id = "com.mitchellh.ghostty"
-run = [
-  # FIX: this is a workaround for https://github.com/nikitabobko/AeroSpace/issues/68
-  # this was also observed in:
-  # - https://github.com/ghostty-org/ghostty/issues/1840
-  # - https://github.com/ghostty-org/ghostty/issues/2006
-  "layout floating",
-  "move-node-to-workspace 4",
-]
-
+if.app-id = "com.github.wez.wezterm"
+run = "move-node-to-workspace 4"
 
 # Workspace 6 - Personal
 [[on-window-detected]]
