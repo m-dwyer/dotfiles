@@ -1,0 +1,54 @@
+eval "$(/opt/homebrew/bin/brew shellenv)"
+eval "$(starship init zsh)"
+export STARSHIP_CONFIG=~/.config/starship/starship.toml
+
+# Added by OrbStack: command-line tools and integration
+source ~/.orbstack/shell/init.zsh 2>/dev/null || :
+
+alias code="code-insiders"
+alias fd="fd --ignore"
+alias cat="bat"
+alias less="less -RFX"
+alias ls="l"
+alias vim="nvim"
+
+# Eza
+alias l="eza -l --icons --git -a"
+alias lt="eza --tree --level=2 --long --icons --git"
+alias ltree="eza --tree --level=2  --icons --git"
+
+# Chezmoi
+alias chezcd="cd $(chezmoi source-path)"
+
+# Git
+alias gc="git commit -m"
+alias gca="git commit -a -m"
+alias gp="git push origin HEAD"
+alias gpu="git pull origin"
+alias gst="git status"
+alias gdiff="git diff"
+alias gco="git checkout"
+alias gb='git branch'
+alias gba='git branch -a'
+alias gadd='git add'
+alias ga='git add -p'
+alias gcoall='git checkout -- .'
+alias gr='git remote'
+alias gre='git reset'
+
+export OBSIDIAN_VAULT="$HOME/Documents/vault"
+
+export ZDOTDIR=~/.config/zsh
+export ZIM_HOME=~/.zim
+
+# Install missing modules, and update ${ZIM_HOME}/init.zsh if missing or outdated.
+if [[ ! ${ZIM_HOME}/init.zsh -nt ${ZDOTDIR:-${HOME}}/.zimrc ]]; then
+  source ${ZIM_HOME}/zimfw.zsh init -q
+fi
+
+autoload -U compinit; compinit
+source ${ZIM_HOME}/init.zsh
+
+eval "$(/opt/homebrew/bin/mise activate zsh)"
+eval "$(zoxide init zsh)"
+

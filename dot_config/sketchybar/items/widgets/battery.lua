@@ -1,6 +1,6 @@
 local icons = require("icons")
-local colors = require("colors")
-local settings = require("settings")
+local colors = require("colors-cat")
+local settings = require("settings-cat")
 
 local battery = sbar.add("item", "widgets.battery", {
     position = "right",
@@ -105,8 +105,8 @@ end)
 
 sbar.add("bracket", "widgets.battery.bracket", {battery.name}, {
     background = {
-        color = colors.bg1,
-        border_color = colors.rainbow[#colors.rainbow - 2],
+        color = colors.bg2,
+        border_color = colors.bg1,
         border_width = 1
     }
 })

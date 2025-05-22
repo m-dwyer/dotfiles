@@ -10,5 +10,5 @@ require("items.front_apps")
 -- Right items
 require("items.calendar")
 require("items.widgets")
-require("items.media")
+-- require("items.media")
 require('items.meetings')

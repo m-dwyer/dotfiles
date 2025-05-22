@@ -1,6 +1,6 @@
-local colors = require("colors")
+local colors = require("colors-cat")
 local icons = require("icons")
-local settings = require("settings")
+local settings = require("settings-cat")
 
 local popup_width = 250
 
@@ -44,7 +44,7 @@ local volume_icon = sbar.add("item", "widgets.volume2", {
 local volume_bracket = sbar.add("bracket", "widgets.volume.bracket", {volume_icon.name, volume_percent.name}, {
     background = {
         color = colors.bg1,
-        border_color = colors.rainbow[#colors.rainbow - 3],
+        border_color = colors.bg2,
         border_width = 1
     },
     popup = {

@@ -1,0 +1,12 @@
+theme = catppuccin-macchiato
+
+# macOS specific features
+macos-titlebar-style = tabs
+macos-option-as-alt = true
+window-save-state = always
+window-vsync = true
+window-colorspace = display-p3
+quick-terminal-screen = macos-menu-bar
+title = " "
+
+background-opacity = 0.9
