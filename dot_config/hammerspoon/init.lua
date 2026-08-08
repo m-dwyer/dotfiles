@@ -9,26 +9,35 @@ hs.loadSpoon("SaveSpotify")
 SpotifySaver = hs.loadSpoon("SaveSpotify")
 
 -- Bind hotkey to both save and like the current Spotify track
-hs.hotkey.bind({ "cmd", "shift" }, "S", function()
-   SpotifySaver:saveCurrentTrack()
-   SpotifySaver:likeCurrentTrack()
-end)
+-- hs.hotkey.bind({ "cmd", "shift" }, "S", function()
+--    SpotifySaver:saveCurrentTrack()
+--    SpotifySaver:likeCurrentTrack()
+-- end)
+
+hs.loadSpoon("SaveTidal")
+TidalSaver = hs.loadSpoon("SaveTidal")
+
+-- Bind hotkey to save current Tidal track
+-- hs.hotkey.bind({ "cmd", "shift" }, "S", function()
+--    hs.alert.show("doing the thing")
+--    TidalSaver:saveCurrentTrack()
+-- end)
 
 -- Load Obsidian Spoon
 hs.loadSpoon("Obsidian")
 
 -- Bind hotkey to show our Obsidian menu
-hs.hotkey.bind({ "cmd", "shift" }, "M", function()
-   spoon.Obsidian:showMenu()
-end)
+-- hs.hotkey.bind({ "cmd", "shift" }, "M", function()
+--    spoon.Obsidian:showMenu()
+-- end)
 
 -- Load Cheetah
 hs.loadSpoon("Cheetah")
 spoon.Cheetah:bindHotkeys({
-{
-   file = "System",
-   toggle = { { "cmd", "shift" }, "H" }
-}
+   {
+      file = "System",
+      toggle = { { "cmd", "shift" }, "H" }
+   }
 })
 
 local yabaiPath = "/opt/homebrew/bin/yabai"
@@ -40,5 +49,5 @@ hs.hotkey.bind({ "cmd", "shift" }, "B", function()
    else
       opacity = "0.0"
    end
-   hs.task.new(yabaiPath, function() end, {"-m", "config", "menubar_opacity", opacity}):start()
+   hs.task.new(yabaiPath, function() end, { "-m", "config", "menubar_opacity", opacity }):start()
 end)
