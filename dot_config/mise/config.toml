@@ -1,0 +1,108 @@
+[tools]
+tilt = "latest"
+gum = "latest"
+# Pinned to a major: global CLIs installed with `pnpm add -g` live in
+# $PNPM_HOME/global/<schema>, and the schema dir changes across majors.
+pnpm = "10"
+node = "24"
+
+[settings]
+env_shell_expand = true
+
+[env]
+PLATFORM_DEV_CONFIG = "$HOME/.config/platform-dev"
+
+# [tasks.dev]
+# description = "Start Tilt (optionally filter repos)"
+# run = "tilt up --file $PLATFORM_DEV_CONFIG/Tiltfile -- {{arg(name=\"repos\", var=true, required=false)}}"
+
+# [tasks."dev:down"]
+# description = "Tear down all Tilt services"
+# run = """
+# #!/usr/bin/env bash
+# set -euo pipefail
+# gum style --foreground 196 --bold "Tearing down all services..."
+# tilt down --file $PLATFORM_DEV_CONFIG/Tiltfile
+# gum style --foreground 82 --bold "Done."
+# """
+
+# [tasks."dev:trigger"]
+# description = "Trigger a Tilt resource"
+# run = "tilt trigger {{arg(name=\"resource\")}}"
+
+# [tasks."dev:status"]
+# description = "Show status of all Tilt resources"
+# run = "tilt get uiresources -o json | gum format -t code"
+
+# [tasks."dev:setup"]
+# description = "Clone repos into source root"
+# run = """
+# #!/usr/bin/env bash
+# set -euo pipefail
+
+# CONFIG="$PLATFORM_DEV_CONFIG/config.yaml"
+# SOURCE_ROOT=$(grep 'source_root:' "$CONFIG" | awk '{print $2}')
+# SOURCE_ROOT=$(eval echo "$SOURCE_ROOT")
+# DEFAULT_ORG=$(grep 'default_org:' "$CONFIG" | awk '{print $2}')
+
+# mkdir -p "$SOURCE_ROOT"
+
+# if [ $# -eq 0 ]; then
+#   gum spin --spinner dot --title "Fetching repos from $DEFAULT_ORG..." -- \
+#     sh -c "gh repo list $DEFAULT_ORG --limit 1000 --json name -q '.[].name' > /tmp/dev-repos.txt"
+
+#   REPO=$(cat /tmp/dev-repos.txt | gum filter --placeholder "Search repos...")
+#   [ -z "$REPO" ] && exit 0
+#   set -- "$REPO"
+# fi
+
+# for ARG in "$@"; do
+#   if [[ "$ARG" == */* ]]; then
+#     ORG="${ARG%%/*}"
+#     REPO="${ARG##*/}"
+#   else
+#     ORG="$DEFAULT_ORG"
+#     REPO="$ARG"
+#   fi
+
+#   DEST="$SOURCE_ROOT/$REPO"
+#   if [ -d "$DEST" ]; then
+#     gum style --foreground 214 "$REPO already exists at $DEST"
+#   else
+#     gum spin --spinner dot --title "Cloning $ORG/$REPO..." -- \
+#       gh repo clone "$ORG/$REPO" "$DEST"
+#     gum style --foreground 82 "Cloned $ORG/$REPO → $DEST"
+#   fi
+# done
+# """
+
+# [tasks."dev:setup:multi"]
+# description = "Clone multiple repos interactively"
+# run = """
+# #!/usr/bin/env bash
+# set -euo pipefail
+
+# CONFIG="$PLATFORM_DEV_CONFIG/config.yaml"
+# SOURCE_ROOT=$(grep 'source_root:' "$CONFIG" | awk '{print $2}')
+# SOURCE_ROOT=$(eval echo "$SOURCE_ROOT")
+# DEFAULT_ORG=$(grep 'default_org:' "$CONFIG" | awk '{print $2}')
+
+# mkdir -p "$SOURCE_ROOT"
+
+# gum spin --spinner dot --title "Fetching repos from $DEFAULT_ORG..." -- \
+#   sh -c "gh repo list $DEFAULT_ORG --limit 1000 --json name -q '.[].name' > /tmp/dev-repos.txt"
+
+# REPOS=$(cat /tmp/dev-repos.txt | gum choose --no-limit --header "Select repos to clone (space to select, enter to confirm)")
+# [ -z "$REPOS" ] && exit 0
+
+# for REPO in $REPOS; do
+#   DEST="$SOURCE_ROOT/$REPO"
+#   if [ -d "$DEST" ]; then
+#     gum style --foreground 214 "$REPO already exists at $DEST"
+#   else
+#     gum spin --spinner dot --title "Cloning $DEFAULT_ORG/$REPO..." -- \
+#       gh repo clone "$DEFAULT_ORG/$REPO" "$DEST"
+#     gum style --foreground 82 "Cloned → $DEST"
+#   fi
+# done
+# """
