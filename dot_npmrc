@@ -1,0 +1,11 @@
+; npm's default global prefix lives *inside* the active node install
+; (~/.local/share/mise/installs/node/<version>), so everything installed with
+; `npm i -g` disappears the moment mise bumps node to a new major.
+;
+; Pin it to a stable, version-independent directory instead — the same durability
+; $PNPM_HOME already gives pnpm's globals. ~/.npm-global/bin is added to PATH in
+; ~/.zshenv; the two must stay in step.
+;
+; This exists because some installers hardcode `npm i -g` (Pi's, for one). Things
+; you install yourself still go through pnpm.
+prefix=~/.npm-global

@@ -13,11 +13,16 @@ export PNPM_HOME="$HOME/Library/pnpm"
 # `mise activate` prepends, so this is a fallback, not a replacement.
 _mise_shims="$HOME/.local/share/mise/shims"
 
+# npm's global bin dir, pinned away from the node install by ~/.npmrc so that
+# `npm i -g` packages survive a node major bump. Needed because some installers
+# hardcode npm (Pi's, for one) — anything you install yourself goes via pnpm.
+_npm_global="$HOME/.npm-global/bin"
+
 # Guarded: nested shells re-source this file and would otherwise bloat PATH.
-for _dir in "$PNPM_HOME" "$_mise_shims"; do
+for _dir in "$PNPM_HOME" "$_npm_global" "$_mise_shims"; do
   case ":$PATH:" in
     *":$_dir:"*) ;;
     *) export PATH="$_dir:$PATH" ;;
   esac
 done
-unset _dir _mise_shims
+unset _dir _mise_shims _npm_global
