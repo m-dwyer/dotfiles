@@ -80,15 +80,55 @@ local volume_slider = sbar.add("slider", popup_width, {
     click_script = 'osascript -e "set volume output volume $PERCENTAGE"'
 })
 
-volume_percent:subscribe("volume_change", function(env)
-    local volume = tonumber(env.INFO)
-    local lead = volume < 10 and "0" or ""
+-- Volume state owned by Lua.
+--
+-- The scroll handler used to run `set volume output volume (get volume + delta)`
+-- in a fresh osascript per tick. That is a read-modify-write across concurrent
+-- processes: scroll quickly and several are in flight, all read the same starting
+-- value, and the last write wins — so ticks were silently dropped. Accumulating
+-- here instead makes it atomic, because Lua callbacks are single-threaded.
+local current_volume = 0
+local pending_volume = nil  -- latest target not yet written to the system
+local volume_in_flight = false
 
-    -- The percentage and the slider derive purely from env.INFO, which sketchybar
-    -- hands us directly. They used to live inside the SwitchAudioSource callback
-    -- below, which gated them behind an ~80ms subprocess on every scroll tick.
+local function render_volume(volume)
+    local lead = volume < 10 and "0" or ""
     volume_percent:set({ label = lead .. volume .. "%" })
     volume_slider:set({ slider = { percentage = volume } })
+end
+
+-- Writes at most one osascript at a time (~180ms each, almost entirely process
+-- startup). Ticks that arrive while one is running collapse into a single
+-- follow-up write with the newest target, so a fast scroll costs one process per
+-- ~180ms rather than one per tick, and still lands on the right value.
+local function flush_volume()
+    if volume_in_flight or pending_volume == nil then
+        return
+    end
+
+    local target = pending_volume
+    pending_volume = nil
+    volume_in_flight = true
+
+    sbar.exec('osascript -e "set volume output volume ' .. target .. '"', function()
+        volume_in_flight = false
+        flush_volume()
+    end)
+end
+
+volume_percent:subscribe("volume_change", function(env)
+    local volume = tonumber(env.INFO)
+    if volume == nil then
+        return
+    end
+
+    -- Mid-scroll our accumulated value is authoritative: this event reports the
+    -- volume as of the write that just landed, which a later tick has already
+    -- superseded. Adopting it here would drag the slider backwards.
+    if pending_volume == nil and not volume_in_flight then
+        current_volume = volume
+        render_volume(volume)
+    end
 
     -- Only the icon depends on which device is active, so only it waits.
     sbar.exec("SwitchAudioSource -t output -c", function(result)
@@ -108,13 +148,15 @@ volume_percent:subscribe("volume_change", function(env)
         elseif Current_output_device == "iD4" then
             icon = "􀝎"
         else
-            if volume > 60 then
+            -- current_volume, not env.INFO: mid-scroll the event is already stale
+            -- and the glyph should match the percentage actually on screen.
+            if current_volume > 60 then
                 icon = icons.volume._100
-            elseif volume > 30 then
+            elseif current_volume > 30 then
                 icon = icons.volume._66
-            elseif volume > 10 then
+            elseif current_volume > 10 then
                 icon = icons.volume._33
-            elseif volume > 0 then
+            elseif current_volume > 0 then
                 icon = icons.volume._10
             end
         end
@@ -252,8 +294,32 @@ local function volume_toggle_details(env)
 end
 
 local function volume_scroll(env)
-    local delta = env.SCROLL_DELTA
-    sbar.exec('osascript -e "set volume output volume (output volume of (get volume settings) + ' .. delta .. ')"')
+    local delta = tonumber(env.SCROLL_DELTA)
+    if delta == nil or delta == 0 then
+        return
+    end
+
+    -- Trackpads report fractional and occasionally large deltas, so round and
+    -- clamp rather than feeding the raw value straight to AppleScript.
+    local target = current_volume + delta
+    if target < 0 then
+        target = 0
+    elseif target > 100 then
+        target = 100
+    end
+    target = math.floor(target + 0.5)
+
+    if target == current_volume then
+        return
+    end
+    current_volume = target
+
+    -- Immediate feedback: no subprocess on the path between the scroll and the
+    -- number moving. The system volume catches up via flush_volume below.
+    render_volume(current_volume)
+
+    pending_volume = current_volume
+    flush_volume()
 end
 
 popups.register("volume", volume_collapse_details)
