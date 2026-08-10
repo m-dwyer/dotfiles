@@ -8,7 +8,7 @@ I use [AeroSpace](https://github.com/nikitabobko/AeroSpace) to manage several wo
 
 1. Web - apps associated with browsing (e.g. Chromium)
 2. Code - apps associated with coding (e.g. VSCode)
-3. Music - apps associated with music (e.g. Spotify)
+3. Music - apps associated with music (e.g. TIDAL)
 4. Files - apps associated with file management (e.g. Finder)
 5. Terminal - apps associated with the command line (e.g. iTerm2)
 6. Productivity - apps associated with organisational things (e.g. Obsidian)
