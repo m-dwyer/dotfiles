@@ -1,14 +1,21 @@
 {
   "name": "pi-sandbox",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:20-bookworm",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:24-bookworm",
   "remoteUser": "node",
   "updateRemoteUserUID": true,
   "mounts": [
     "source=${localEnv:HOME}/.pi,target=/home/node/.pi,type=bind",
-    "source=${localEnv:HOME}/.gitconfig,target=/home/node/.gitconfig,type=bind,readonly"
+    "source=${localEnv:HOME}/.gitconfig,target=/home/node/.gitconfig,type=bind,readonly",
+    "source=pi-sandbox-mise,target=/home/node/.local/share/mise,type=volume",
+    "source=pi-sandbox-mise-cache,target=/home/node/.cache/mise,type=volume",
+    "source=pi-sandbox-cargo,target=/home/node/.cargo,type=volume",
+    "source=pi-sandbox-cargo-target,target=/home/node/.cargo-target,type=volume"
   ],
   "containerEnv": {
-    "PI_SANDBOX": "1"
+    "PI_SANDBOX": "1",
+    "CARGO_TARGET_DIR": "/home/node/.cargo-target"
   },
-  "postCreateCommand": "npm install -g @earendil-works/pi-coding-agent"
+  "onCreateCommand": "sudo chown -R node /home/node/.local/share/mise /home/node/.cache/mise /home/node/.cargo /home/node/.cargo-target && curl -fsSL https://mise.run | sh && echo 'eval \"$(~/.local/bin/mise activate bash)\"' >> ~/.bashrc",
+  "postCreateCommand": "npm install -g @earendil-works/pi-coding-agent",
+  "postStartCommand": "cd ${containerWorkspaceFolder} && ~/.local/bin/mise trust --yes || true; ~/.local/bin/mise install || true"
 }
