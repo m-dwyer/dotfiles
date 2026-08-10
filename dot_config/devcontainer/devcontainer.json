@@ -17,5 +17,5 @@
   },
   "onCreateCommand": "sudo chown -R node:node /home/node/.local /home/node/.cache /home/node/.cargo /home/node/.cargo-target && curl -fsSL https://mise.run | sh && echo 'eval \"$(~/.local/bin/mise activate bash)\"' >> ~/.bashrc",
   "postCreateCommand": "npm install -g @earendil-works/pi-coding-agent",
-  "postStartCommand": "cd ${containerWorkspaceFolder} && ~/.local/bin/mise trust --yes || true; ~/.local/bin/mise install || true"
+  "postStartCommand": "cd ${containerWorkspaceFolder} && ~/.local/bin/mise trust --yes --quiet || true; ~/.local/bin/mise install --quiet || true"
 }

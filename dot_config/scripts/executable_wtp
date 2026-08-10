@@ -90,7 +90,16 @@ if ! live_workspaces | grep -qxF "$name"; then
 		[[ -f "$dir/.devcontainer/devcontainer.json" ]] ||
 			config=(--config "$HOME/.config/devcontainer/devcontainer.json")
 		print "wtp: starting container for $name (first run builds the image)..."
-		devcontainer up --workspace-folder "$dir" "${config[@]}" >/dev/null
+		# Quiet on success, full log on failure: the CLI streams container build and
+		# mise progress to stderr, and those redraws do not collapse without a tty.
+		log=$(mktemp -t wtp-devcontainer)
+		if ! devcontainer up --workspace-folder "$dir" "${config[@]}" >"$log" 2>&1; then
+			print -u2 "wtp: devcontainer up failed for $name"
+			tail -20 "$log" >&2
+			print -u2 "wtp: full log at $log"
+			exit 1
+		fi
+		rm -f "$log"
 		domain=(--domain-name devcontainer)
 	fi
 	agent=$(wezterm cli spawn --new-window "${domain[@]}" --workspace "$name" --cwd "$dir")
