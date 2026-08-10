@@ -8,7 +8,7 @@ require("items.spaces")
 require("items.front_apps")
 
 -- Right items
-require("items.calendar")
+-- require("items.calendar")
 require("items.widgets")
 -- require("items.media")
-require('items.meetings')
+-- require('items.meetings')

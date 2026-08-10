@@ -1,0 +1,28 @@
+# ~/.zshenv — sourced by EVERY zsh: interactive, non-interactive, and scripts.
+# Environment that must be present outside an interactive prompt belongs here,
+# not in .zshrc (which non-interactive shells never read).
+
+# pnpm's global bin dir. `pnpm add -g` installs into $PNPM_HOME/global/<schema>,
+# which is independent of the active node version, so globals survive node bumps.
+export PNPM_HOME="$HOME/Library/pnpm"
+
+# mise shims. `mise activate` (in .zshrc) only rewrites PATH from a precmd hook,
+# which never fires in a non-interactive shell — without these, scripts, editor
+# tasks and launchd jobs silently fall back to whatever node happens to be on the
+# system PATH. Interactive shells still prefer the real install paths that
+# `mise activate` prepends, so this is a fallback, not a replacement.
+_mise_shims="$HOME/.local/share/mise/shims"
+
+# npm's global bin dir, pinned away from the node install by ~/.npmrc so that
+# `npm i -g` packages survive a node major bump. Needed because some installers
+# hardcode npm (Pi's, for one) — anything you install yourself goes via pnpm.
+_npm_global="$HOME/.npm-global/bin"
+
+# Guarded: nested shells re-source this file and would otherwise bloat PATH.
+for _dir in "$PNPM_HOME" "$_npm_global" "$_mise_shims"; do
+  case ":$PATH:" in
+    *":$_dir:"*) ;;
+    *) export PATH="$_dir:$PATH" ;;
+  esac
+done
+unset _dir _mise_shims _npm_global

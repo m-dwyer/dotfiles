@@ -14,8 +14,11 @@ after-startup-command = [
 ]
 
 # Notify Sketchybar about workspace change
+# FOCUSED_DISPLAY used to be passed here too, but nothing in the sketchybar config
+# ever read it — and computing it cost an extra `aerospace list-monitors` plus an
+# `awk` on every single workspace switch.
 exec-on-workspace-change = ['/bin/bash', '-c',
-    'sketchybar --trigger aerospace_workspace_changed FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE FOCUSED_DISPLAY=$(aerospace list-monitors --focused | awk "{print $1}")'
+    'sketchybar --trigger aerospace_workspace_changed FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE'
 ]
 
 # Start AeroSpace at login
@@ -190,6 +193,10 @@ run = 'move-node-to-workspace 1'
 # Workspace - coding
 [[on-window-detected]]
 if.app-id = 'com.microsoft.VSCodeInsiders'
+run = 'move-node-to-workspace 2'
+
+[[on-window-detected]]
+if.app-id = 'com.emdee.sonobase'
 run = 'move-node-to-workspace 2'
 
 # Workspace - Music

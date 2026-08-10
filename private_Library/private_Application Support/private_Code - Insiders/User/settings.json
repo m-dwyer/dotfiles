@@ -12,8 +12,6 @@
   "gopls": {
     "ui.semanticTokens": true,
   },
-  // use Mocha as the base
-  "workbench.colorTheme": "Catppuccin Macchiato",
   // pink as the accent color
   "catppuccin.accentColor": "pink",
   // make Mocha specifically very dark
@@ -31,4 +29,41 @@
       "statusBar.foreground": "accent",
     },
   },
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "[dart]": {
+    "editor.defaultFormatter": "Dart-Code.dart-code",
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true,
+    "editor.rulers": [
+      80
+    ],
+    "editor.selectionHighlight": false,
+    "editor.tabCompletion": "onlySnippets",
+    "editor.wordBasedSuggestions": "off",
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit",
+      "source.fixAll": "explicit",
+    }
+  },
+  "python.defaultInterpreterPath": "/opt/homebrew/Caskroom/miniconda/base/envs/embed",
+  "terminal.integrated.inheritEnv": false,
+  "git.openRepositoryInParentFolders": "never",
+  "dart.debugExternalPackageLibraries": true,
+  "dart.debugSdkLibraries": false,
+  "task.allowAutomaticTasks": "on",
+  "editor.codeActionsOnSave": {},
+  "dart.mcpServer": true,
+  "chat.mcp.discovery.enabled": {
+    "claude-desktop": true
+  },
+  "editor.largeFileOptimizations": false,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "editor.multiCursorModifier": "ctrlCmd",
+  "chat.tools.terminal.outputLocation": "chat",
+  "claudeCode.preferredLocation": "panel",
+  "workbench.colorTheme": "Catppuccin Macchiato",
+  "docker.extension.enableComposeLanguageServer": false,
+  "diffEditor.renderSideBySide": false,
+  "mermaidChart.showGenerateDiagramCodeLens": false,
 }

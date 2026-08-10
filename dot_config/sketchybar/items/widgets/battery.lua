@@ -1,6 +1,7 @@
 local icons = require("icons")
 local colors = require("colors-cat")
 local settings = require("settings-cat")
+local popups = require("helpers.popups")
 
 local battery = sbar.add("item", "widgets.battery", {
     position = "right",
@@ -84,15 +85,28 @@ battery:subscribe({"routine", "power_source_change", "system_woke"}, function()
     end)
 end)
 
-battery:subscribe("mouse.clicked", function(env)
-    local drawing = battery:query().popup.drawing
+local function battery_collapse_details()
+    local drawing = battery:query().popup.drawing == "on"
+    if not drawing then
+        return
+    end
+    popups.disarm()
     battery:set({
         popup = {
-            drawing = "toggle"
+            drawing = false
         }
     })
+end
 
-    if drawing == "off" then
+battery:subscribe("mouse.clicked", function(env)
+    local should_draw = battery:query().popup.drawing == "off"
+    if should_draw then
+        battery:set({
+            popup = {
+                drawing = true
+            }
+        })
+        popups.arm()
         sbar.exec("pmset -g batt", function(batt_info)
             local found, _, remaining = batt_info:find(" (%d+:%d+) remaining")
             local label = found and remaining .. "h" or "N/A"
@@ -100,8 +114,28 @@ battery:subscribe("mouse.clicked", function(env)
                 label = label
             })
         end)
+    else
+        battery_collapse_details()
     end
 end)
+
+popups.register("battery", battery_collapse_details)
+
+-- Kept, but it is not load-bearing: delivery is unreliable (see helpers/popups).
+battery:subscribe("mouse.exited.global", battery_collapse_details)
+
+-- Reaching this widget dismisses anything else that is open.
+battery:subscribe("mouse.entered", function()
+    popups.close_all("battery")
+    popups.hover(true)
+end)
+battery:subscribe("mouse.exited", function()
+    popups.hover(false)
+end)
+
+-- The popup row itself, so reading it does not advance the idle timer.
+remaining_time:subscribe("mouse.entered", function() popups.hover(true) end)
+remaining_time:subscribe("mouse.exited", function() popups.hover(false) end)
 
 sbar.add("bracket", "widgets.battery.bracket", {battery.name}, {
     background = {

@@ -1,33 +1,10 @@
-function dump(o)
-    if type(o) == 'table' then
-        local s = '{ '
-        for k, v in pairs(o) do
-            local key = k
-            if type(key) ~= 'number' then
-                key = '"' .. key .. '"'
-            end
-            s = s .. '[' .. key .. '] = ' .. dump(v) .. ','
-        end
-        return s .. '} '
-    else
-        return tostring(o)
-    end
-end
-
-function explode(div, str)
-    if (div == '') then
-        return false
-    end
-    local pos, arr = 0, {}
-    for st, sp in function()
-        return string.find(str, div, pos, true)
-    end do
-        table.insert(arr, string.sub(str, pos, st - 1))
-        pos = sp + 1
-    end
-    table.insert(arr, string.sub(str, pos))
-    return arr
-end
+-- Minimal AeroSpace query helpers.
+--
+-- Everything else that used to live here (dump, explode, get_workspaces,
+-- get_monitors, get_workspaces_on_monitor, get_visible_workspace_on_monitor,
+-- is_workspace_selected) was either never called or has been replaced by cached
+-- event state in items/spaces.lua. Each one was a blocking io.popen, and
+-- is_workspace_selected in particular was O(monitors) subprocesses per call.
 
 function parse_string_to_table(s)
     local result = {}
@@ -37,57 +14,13 @@ function parse_string_to_table(s)
     return result
 end
 
-function get_workspaces()
-    local file = io.popen("aerospace list-workspaces --all")
-    local result = file:read("*a")
-    file:close()
-
-    return parse_string_to_table(result)
-end
-
+-- Blocking, but called exactly once at bar load to seed the initial highlight.
+-- Thereafter items/spaces.lua tracks the focused workspace from the
+-- aerospace_workspace_changed event payload instead of re-querying.
 function get_current_workspace()
     local file = io.popen("aerospace list-workspaces --focused")
     local result = file:read("*a")
     file:close()
 
     return parse_string_to_table(result)[1]
-end
-
-function get_monitors()
-    local file = io.popen("aerospace list-monitors | awk '{print $1}'")
-    local result = file:read("*a")
-    file:close()
-
-    return parse_string_to_table(result)
-end
-
-function get_workspaces_on_monitor(monitor)
-    local file = io.popen("aerospace list-workspaces --monitor " .. monitor)
-    local result = file:read("*a")
-    file:close()
-
-    return parse_string_to_table(result, "\n")
-end
-
-function get_visible_workspace_on_monitor(monitor)
-    local file = io.popen("aerospace list-workspaces --monitor " .. monitor .. " --visible")
-    local result = file:read("*a")
-    file:close()
-
-    return parse_string_to_table(result)[1]
-end
-
-function is_workspace_selected(workspace)
-    local available_monitors = get_monitors()
-    -- print("Checking: " .. workspace .. " Available monitors: " .. dump(available_monitors))
-    for _, monitor in ipairs(available_monitors) do
-        local visible_workspace = get_visible_workspace_on_monitor(monitor)
-        -- print('types' .. type(visible_workspace) .. ' - ' .. type(workspace))
-        -- print("Checking: " .. workspace .. " On Monitor: " .. monitor .. " Result: " .. visible_workspace .. ' - ', (visible_workspace == workspace))
-        if visible_workspace == workspace then
-            return true
-        end
-    end
-
-    return false
 end

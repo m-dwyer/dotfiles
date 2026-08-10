@@ -36,9 +36,17 @@ alias gcoall='git checkout -- .'
 alias gr='git remote'
 alias gre='git reset'
 
+alias gnew='git switch main && git pull --ff-only origin main && git switch -c'
+
+alias codex-plan='codex -m gpt-5.2'
+# alias codex-plan='codex -m gpt-5.2 "Read .claude/PLANNING_CONTEXT.md and follow it."'
+
 export OBSIDIAN_VAULT="$HOME/Documents/vault"
 
-export ZDOTDIR=~/.config/zsh
+# Deliberately NOT exported: zim and HISTFILE resolve it within this shell, but
+# exporting it makes every child zsh read ~/.config/zsh/.zshrc instead of this
+# file — i.e. `exec zsh` would drop mise, starship and every alias.
+ZDOTDIR=~/.config/zsh
 export ZIM_HOME=~/.zim
 
 # Install missing modules, and update ${ZIM_HOME}/init.zsh if missing or outdated.
@@ -49,6 +57,70 @@ fi
 autoload -U compinit; compinit
 source ${ZIM_HOME}/init.zsh
 
-eval "$(/opt/homebrew/bin/mise activate zsh)"
 eval "$(zoxide init zsh)"
 
+# other scripts
+export PATH="$HOME/.config/scripts:$PATH"
+
+
+# bun completions
+[ -s "/Users/em/.bun/_bun" ] && source "/Users/em/.bun/_bun"
+
+# bun
+# export BUN_INSTALL="$HOME/.bun"
+# export PATH="$BUN_INSTALL/bin:$PATH"
+
+# Golang environment variables
+export GOPATH=$HOME/go
+
+export GOROOT="$(brew --prefix golang)/libexec"
+
+# Update PATH to include GOPATH and GOROOT binaries
+export PATH=$GOPATH/bin:$GOROOT/bin:$HOME/.local/bin:$PATH
+
+
+yt() {
+    if [ "$#" -eq 0 ] || [ "$#" -gt 2 ]; then
+        echo "Usage: yt [-t | --timestamps] youtube-link"
+        echo "Use the '-t' flag to get the transcript with timestamps."
+        return 1
+    fi
+
+    transcript_flag="--transcript"
+    if [ "$1" = "-t" ] || [ "$1" = "--timestamps" ]; then
+        transcript_flag="--transcript-with-timestamps"
+        shift
+    fi
+    local video_link="$1"
+    fabric -y "$video_link" $transcript_flag
+}
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/opt/homebrew/Caskroom/miniconda/base/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/opt/homebrew/Caskroom/miniconda/base/etc/profile.d/conda.sh" ]; then
+        . "/opt/homebrew/Caskroom/miniconda/base/etc/profile.d/conda.sh"
+    else
+        export PATH="/opt/homebrew/Caskroom/miniconda/base/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+
+# PNPM_HOME moved to ~/.zshenv so non-interactive shells get it too.
+eval "$(mise activate zsh)"
+
+export PATH="$PATH":"$HOME/.pub-cache/bin"
+
+export PATH="$HOME/Library/Android/sdk/cmdline-tools/latest/bin:$PATH"
+
+eval "$(direnv hook zsh)"
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/em/.cache/lm-studio/bin"
+# End of LM Studio CLI section
+
+export HF_HUB_DISABLE_XET=1

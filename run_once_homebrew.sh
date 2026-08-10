@@ -8,6 +8,12 @@ tap "homebrew/services"
 
 # Util
 brew "chezmoi"
+# Bootstraps every language runtime — must come from brew, not from itself.
+# Deliberately no "node" here: node/pnpm are owned by mise (~/.config/mise/config.toml).
+brew "mise"
+brew "direnv"
+brew "eza"
+brew "gh"
 
 # Desktop
 tap "felixkratz/formulae"

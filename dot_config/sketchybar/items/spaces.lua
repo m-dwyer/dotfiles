@@ -1,24 +1,17 @@
 local colors = require("colors-cat")
 local icons = require("icons")
 local settings = require("settings-cat")
--- local app_icons = require("helpers.app_icons")
 
 local workspacesConfig = require("workspaces")
+local popups = require("helpers.popups")
 
 local spaces = {}
-local workspaces = {
-  ["1"] = { icon = "1", name = "Web" },
-  ["2"] = { icon = "2", name = "Code" },
-  ["3"] = { icon = "3", name = "Music" },
-  ["4"] = { icon = "4", name = "Files" },
-  ["5"] = { icon = "5", name = "Terminal" },
-  ["6"] = { icon = "6", name = "Productivity" },
-  ["7"] = { icon = "7", name = "Misc" },
-}
 
 local workspaces = workspacesConfig.workspaces
 local workspaceOrder = workspacesConfig.order
 
+-- Queried once at startup, then kept current by the aerospace_workspace_changed
+-- handler below. Avoids a blocking io.popen on every mouse event.
 local current_workspace = get_current_workspace()
 
 local function split(str, sep)
@@ -89,6 +82,9 @@ for i, key in ipairs(workspaceOrder) do
     })
 
   space:subscribe("mouse.entered", function(env)
+    -- Moving onto the workspace strip dismisses any open widget popup.
+    popups.close_all()
+
     sbar.animate("tanh", 30, function()
       spaces[i]:set({ label = { width = "dynamic" } })
     end)
@@ -133,6 +129,7 @@ for i, key in ipairs(workspaceOrder) do
   })
 
   space:subscribe("aerospace_workspace_changed", function(env)
+    current_workspace = env.FOCUSED_WORKSPACE
     local selected = env.FOCUSED_WORKSPACE == key
 
     sbar.animate("tanh", 30, function()
@@ -172,7 +169,7 @@ for i, key in ipairs(workspaceOrder) do
 
   space:subscribe("mouse.exited", function(env)
     local exitedWorkspace = string.match(env.NAME, "space%.([%w_]+)")
-    local current = get_current_workspace()
+    local current = current_workspace
 
     space:set({
       popup = {
@@ -180,68 +177,8 @@ for i, key in ipairs(workspaceOrder) do
       }
     })
 
-    print("exited workspace: " .. exitedWorkspace == current)
-
     sbar.animate("tanh", 30, function()
       spaces[i]:set({ label = { width = exitedWorkspace == current and "dynamic" or 0 } })
     end)
   end)
 end
-
-local space_window_observer = sbar.add("item", {
-  drawing = false,
-  updates = true
-})
-
--- Event handles
-space_window_observer:subscribe("space_windows_change", function(env)
-  for i, workspace in ipairs(workspaces) do
-    sbar.exec("aerospace list-windows --workspace " .. i .. " --format '%{app-name}' --json ", function(apps)
-      local icon_line = ""
-      local no_app = true
-      for i, app in ipairs(apps) do
-        no_app = false
-        local app_name = app["app-name"]
-        local lookup = app_icons[app_name]
-        local icon = ((lookup == nil) and app_icons["default"] or lookup)
-        icon_line = icon_line .. " " .. icon
-      end
-
-      if no_app then
-        icon_line = " —"
-      end
-
-      sbar.animate("tanh", 10, function()
-        spaces[i]:set({
-          label = icon_line
-        })
-      end)
-    end)
-  end
-end)
-
-space_window_observer:subscribe("aerospace_focus_change", function(env)
-  for i, workspace in ipairs(workspaces) do
-    sbar.exec("aerospace list-windows --workspace " .. i .. " --format '%{app-name}' --json ", function(apps)
-      local icon_line = ""
-      local no_app = true
-      for i, app in ipairs(apps) do
-        no_app = false
-        local app_name = app["app-name"]
-        local lookup = app_icons[app_name]
-        local icon = ((lookup == nil) and app_icons["default"] or lookup)
-        icon_line = icon_line .. " " .. icon
-      end
-
-      if no_app then
-        icon_line = " —"
-      end
-
-      sbar.animate("tanh", 10, function()
-        spaces[i]:set({
-          label = icon_line
-        })
-      end)
-    end)
-  end
-end)
