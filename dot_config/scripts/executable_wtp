@@ -1,6 +1,9 @@
 #!/usr/bin/env zsh
 # Open (or switch to) the WezTerm workspace for a project directory.
 #
+# With no argument, fuzzy-pick a git repo. Workspaces that already exist are
+# marked, so the picker doubles as a workspace switcher.
+#
 # Sandboxed by default: panes run inside a devcontainer via the `devcontainer`
 # exec domain in wezterm.lua. A repo's own .devcontainer/devcontainer.json wins;
 # otherwise ~/.config/devcontainer/devcontainer.json applies.
@@ -13,14 +16,21 @@
 emulate -L zsh
 set -euo pipefail
 
+search_roots=("$HOME/src")
+search_depth=4
+
 sandbox=true
 
 usage() {
 	cat <<'EOF'
 Usage: wtp [-n] [DIR]
 
-Open or switch to the WezTerm workspace for a project directory (default: cwd).
+Open or switch to the WezTerm workspace for a project directory.
 Creates Pi on the left and a shell on the right, both inside a devcontainer.
+
+  wtp            Fuzzy-pick a git repo (* marks a live workspace)
+  wtp .          Use the current directory
+  wtp DIR        Use a specific directory
 
   -n, --no-sandbox   Run on the host instead of in a container
   -h, --help         Show this help
@@ -35,17 +45,41 @@ while [[ "${1:-}" == -* ]]; do
 	esac
 done
 
-dir="${1:-$PWD}"
+[[ -n "${WEZTERM_PANE:-}" ]] || { print -u2 "wtp: not running inside WezTerm"; exit 1 }
+
+live_workspaces() {
+	wezterm cli list --format json | python3 -c '
+import json, sys
+print("\n".join(sorted({p["workspace"] for p in json.load(sys.stdin)})))'
+}
+
+if (( $# )); then
+	dir="$1"
+else
+	(( $+commands[fzf] && $+commands[fd] )) || {
+		print -u2 "wtp: the picker needs fzf and fd; pass a directory instead"
+		exit 1
+	}
+	typeset -A live
+	while read -r name; do live[$name]=1; done < <(live_workspaces)
+	selection=$(
+		fd -H -t d '^\.git$' "${search_roots[@]}" --max-depth "$search_depth" \
+			--exclude node_modules 2>/dev/null |
+			sed 's|/\.git/*$||' | sort -u |
+			while read -r repo; do
+				print "${live[${repo:t}]+*}\t$repo"
+			done |
+			fzf --prompt 'project> ' --with-nth 2.. --delimiter '\t' \
+				--height 40% --reverse --no-sort
+	) || exit 0
+	dir="${selection#*$'\t'}"
+fi
+
 [[ -d "$dir" ]] || { print -u2 "wtp: not a directory: $dir"; exit 1 }
 dir="${dir:A}"
 name="${dir:t}"
 
-[[ -n "${WEZTERM_PANE:-}" ]] || { print -u2 "wtp: not running inside WezTerm"; exit 1 }
-
-if ! wezterm cli list --format json | python3 -c '
-import json, sys
-sys.exit(0 if any(p["workspace"] == sys.argv[1] for p in json.load(sys.stdin)) else 1)
-' "$name"; then
+if ! live_workspaces | grep -qxF "$name"; then
 	domain=()
 	if $sandbox; then
 		(( $+commands[devcontainer] )) || {
