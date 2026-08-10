@@ -1,0 +1,97 @@
+#!/usr/bin/env zsh
+# Open the pi-subagents inspector dashboard for an async run in a WezTerm split.
+emulate -L zsh
+set -euo pipefail
+
+PKG="${PI_SUBAGENTS_DIR:-$HOME/.pi/agent/npm/node_modules/pi-subagents}"
+RUNNER="$PKG/inspector-runner.mjs"
+
+tmp="${TMPDIR:-/tmp}"
+ASYNC="${tmp%/}/pi-subagents-uid-$(id -u)/async-subagent-runs"
+
+controls=false
+index=""
+list=false
+
+usage() {
+  cat <<'EOF'
+Usage: pi-inspect [-c] [-i INDEX] [-l] [RUN_ID_PREFIX]
+
+Opens the pi-subagents inspector for an async subagent run in a WezTerm split.
+Defaults to the most recent running run, falling back to the most recent run.
+The pane mirrors lifecycle artifacts; closing it does not stop the run.
+
+  -c          Enable steer/stop controls (default: read-only)
+  -i INDEX    Inspect a specific child transcript by index
+  -l          List inspectable runs and exit
+  -h          Show this help
+EOF
+}
+
+while getopts ":ci:lh" opt; do
+  case "$opt" in
+    c) controls=true ;;
+    i) index="$OPTARG" ;;
+    l) list=true ;;
+    h) usage; exit 0 ;;
+    \?) print -u2 "pi-inspect: unknown option -$OPTARG"; exit 2 ;;
+    :) print -u2 "pi-inspect: -$OPTARG requires a value"; exit 2 ;;
+  esac
+done
+shift $((OPTIND - 1))
+match="${1:-}"
+
+[[ -f "$RUNNER" ]] || { print -u2 "pi-inspect: no inspector runner at $RUNNER"; exit 1 }
+[[ -d "$ASYNC" ]] || { print -u2 "pi-inspect: no async run directory at $ASYNC"; exit 1 }
+
+rows=$(python3 - "$ASYNC" "$match" <<'PY'
+import json, os, sys
+
+root, match = sys.argv[1], sys.argv[2]
+rows = []
+for name in os.listdir(root):
+    status = os.path.join(root, name, "status.json")
+    if not os.path.isfile(status):
+        continue
+    try:
+        with open(status) as handle:
+            st = json.load(handle)
+    except Exception:
+        continue
+    run_id = st.get("runId") or name
+    if match and not run_id.startswith(match):
+        continue
+    when = st.get("lastUpdate") or st.get("startedAt") or 0
+    rows.append((int(when), run_id, st.get("state", "?"),
+                 st.get("cwd", ""), os.path.join(root, name)))
+rows.sort(reverse=True)
+for row in rows:
+    print("\t".join(str(field) for field in row))
+PY
+)
+
+[[ -n "$rows" ]] || { print -u2 "pi-inspect: no inspectable runs${match:+ matching '$match'}"; exit 1 }
+
+if $list; then
+  printf '%-38s %-10s %s\n' RUN STATE CWD
+  while IFS=$'\t' read -r _ run_id state cwd _; do
+    printf '%-38s %-10s %s\n' "$run_id" "$state" "$cwd"
+  done <<< "$rows"
+  exit 0
+fi
+
+pick=$(<<< "$rows" awk -F'\t' '$3=="running"||$3=="queued"{print;exit}')
+[[ -n "$pick" ]] || pick=$(<<< "$rows" head -1)
+IFS=$'\t' read -r _ run_id state cwd dir <<< "$pick"
+
+args=(node "$RUNNER" --async-dir "$dir" --run-id "$run_id"
+      --allow-steer "$controls" --allow-stop "$controls")
+[[ -n "$index" ]] && args+=(--index "$index")
+
+if [[ -n "${WEZTERM_PANE:-}" ]] && (( $+commands[wezterm] )); then
+  pane=$(wezterm cli split-pane --right --percent 40 --cwd "${cwd:-$PWD}" -- "${args[@]}")
+  $controls && mode="steer/stop enabled" || mode="read-only"
+  print "pi-inspect: pane $pane -> $run_id ($state, $mode)"
+else
+  exec "${args[@]}"
+fi
