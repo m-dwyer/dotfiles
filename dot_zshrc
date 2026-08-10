@@ -2,6 +2,11 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 eval "$(starship init zsh)"
 export STARSHIP_CONFIG=~/.config/starship/starship.toml
 
+# OSC 133 semantic zones for WezTerm (prompt jumping, copy-last-output).
+# Must come after starship: it appends to precmd_functions. No-ops elsewhere.
+[ -f /Applications/WezTerm.app/Contents/Resources/wezterm.sh ] \
+  && source /Applications/WezTerm.app/Contents/Resources/wezterm.sh
+
 # Added by OrbStack: command-line tools and integration
 source ~/.orbstack/shell/init.zsh 2>/dev/null || :
 

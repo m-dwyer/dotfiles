@@ -1,0 +1,68 @@
+#!/usr/bin/env zsh
+# Open (or switch to) the WezTerm workspace for a project directory.
+#
+# Sandboxed by default: panes run inside a devcontainer via the `devcontainer`
+# exec domain in wezterm.lua. A repo's own .devcontainer/devcontainer.json wins;
+# otherwise ~/.config/devcontainer/devcontainer.json applies.
+#
+# Panes are ephemeral: Pi stores sessions per project directory, so `pi -c`
+# restores a conversation without the terminal holding it. Construction happens
+# here rather than in Lua so the domain stays a one-line change; switching lives
+# in the wezterm.lua user-var hook because `wezterm cli` has no
+# activate-workspace verb.
+emulate -L zsh
+set -euo pipefail
+
+sandbox=true
+
+usage() {
+	cat <<'EOF'
+Usage: wtp [-n] [DIR]
+
+Open or switch to the WezTerm workspace for a project directory (default: cwd).
+Creates Pi on the left and a shell on the right, both inside a devcontainer.
+
+  -n, --no-sandbox   Run on the host instead of in a container
+  -h, --help         Show this help
+EOF
+}
+
+while [[ "${1:-}" == -* ]]; do
+	case "$1" in
+		-n|--no-sandbox) sandbox=false; shift ;;
+		-h|--help) usage; exit 0 ;;
+		*) print -u2 "wtp: unknown option $1"; exit 2 ;;
+	esac
+done
+
+dir="${1:-$PWD}"
+[[ -d "$dir" ]] || { print -u2 "wtp: not a directory: $dir"; exit 1 }
+dir="${dir:A}"
+name="${dir:t}"
+
+[[ -n "${WEZTERM_PANE:-}" ]] || { print -u2 "wtp: not running inside WezTerm"; exit 1 }
+
+if ! wezterm cli list --format json | python3 -c '
+import json, sys
+sys.exit(0 if any(p["workspace"] == sys.argv[1] for p in json.load(sys.stdin)) else 1)
+' "$name"; then
+	domain=()
+	if $sandbox; then
+		(( $+commands[devcontainer] )) || {
+			print -u2 "wtp: devcontainer CLI not installed (brew install devcontainer), or use -n"
+			exit 1
+		}
+		config=()
+		[[ -f "$dir/.devcontainer/devcontainer.json" ]] ||
+			config=(--config "$HOME/.config/devcontainer/devcontainer.json")
+		print "wtp: starting container for $name (first run builds the image)..."
+		devcontainer up --workspace-folder "$dir" "${config[@]}" >/dev/null
+		domain=(--domain-name devcontainer)
+	fi
+	agent=$(wezterm cli spawn --new-window "${domain[@]}" --workspace "$name" --cwd "$dir")
+	wezterm cli split-pane --pane-id "$agent" --right --cwd "$dir" >/dev/null
+	wezterm cli send-text --pane-id "$agent" --no-paste $'pi\n'
+fi
+
+printf '\033]1337;SetUserVar=open_project=%s\007' "$(printf '%s' "$name" | base64 | tr -d '\n')"
+print "wtp: $name$($sandbox && print ' [sandboxed]')"
