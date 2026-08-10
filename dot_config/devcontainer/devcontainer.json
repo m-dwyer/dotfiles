@@ -1,0 +1,14 @@
+{
+  "name": "pi-sandbox",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20-bookworm",
+  "remoteUser": "node",
+  "updateRemoteUserUID": true,
+  "mounts": [
+    "source=${localEnv:HOME}/.pi,target=/home/node/.pi,type=bind",
+    "source=${localEnv:HOME}/.gitconfig,target=/home/node/.gitconfig,type=bind,readonly"
+  ],
+  "containerEnv": {
+    "PI_SANDBOX": "1"
+  },
+  "postCreateCommand": "npm install -g @earendil-works/pi-coding-agent"
+}
