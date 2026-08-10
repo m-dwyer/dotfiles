@@ -15,7 +15,7 @@
     "PI_SANDBOX": "1",
     "CARGO_TARGET_DIR": "/home/node/.cargo-target"
   },
-  "onCreateCommand": "sudo chown -R node /home/node/.local/share/mise /home/node/.cache/mise /home/node/.cargo /home/node/.cargo-target && curl -fsSL https://mise.run | sh && echo 'eval \"$(~/.local/bin/mise activate bash)\"' >> ~/.bashrc",
+  "onCreateCommand": "sudo chown -R node:node /home/node/.local /home/node/.cache /home/node/.cargo /home/node/.cargo-target && curl -fsSL https://mise.run | sh && echo 'eval \"$(~/.local/bin/mise activate bash)\"' >> ~/.bashrc",
   "postCreateCommand": "npm install -g @earendil-works/pi-coding-agent",
   "postStartCommand": "cd ${containerWorkspaceFolder} && ~/.local/bin/mise trust --yes || true; ~/.local/bin/mise install || true"
 }
