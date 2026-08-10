@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 
-# Install required packages
-brew bundle --no-lock --file=/dev/stdin <<EOF
+# Install required packages.
+# No --no-lock: the flag was removed in Homebrew 6 and made this fail silently,
+# because without `|| exit 1` the script still exited 0 and chezmoi recorded the
+# run_once script as done while installing nothing.
+brew bundle --file=/dev/stdin <<EOF || exit 1
 
 tap "homebrew/bundle"
 tap "homebrew/services"
@@ -19,12 +22,14 @@ brew "gh"
 tap "felixkratz/formulae"
 tap "nikitabobko/tap"
 tap "koekeishiya/formulae"
-brew "yabai"
+# Fully qualified: yabai also exists in asmvik/formulae, which brew rejects as ambiguous.
+brew "koekeishiya/formulae/yabai"
 brew "lua"
 brew "felixkratz/formulae/borders"
 brew "felixkratz/formulae/sketchybar"
 cask "aerospace"
 cask "hammerspoon"
+cask "keyclu"
 
 brew "nowplaying-cli"
 brew "switchaudio-osx"
@@ -36,9 +41,6 @@ brew "zoxide"
 brew "ripgrep"
 brew "fzf"
 
-# Media
-brew "spicetify-cli"
-
 # Fonts
 cask "font-fira-code-nerd-font"
 cask "font-hack-nerd-font"
@@ -46,14 +48,16 @@ cask "font-sf-pro"
 cask "font-space-mono-nerd-font"
 
 # Tools
+# Cask only: the wezterm formula was removed from homebrew-core, and the cask
+# already provides the wezterm/wezterm-gui/wezterm-mux-server symlinks.
 cask "wezterm"
-brew "wezterm"
 brew "starship"
 brew "btop"
 brew "neovim"
 brew "difftastic"
 brew "gdu"
 brew "lazydocker"
+brew "devcontainer"
 brew "bat"
 brew "xh"
 brew "posting"
