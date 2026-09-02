@@ -1,3 +1,42 @@
-Music,cmd+shift+S,Save Spotify track
-Productivity,cmd+shift+M,Obsidian quick menu
-WM,cmd+shift+B,Toggle Mac menubar
+WezTerm,ctrl+B then h j k l,Move between panes
+WezTerm,ctrl+B then arrows,Move between panes
+WezTerm,ctrl+B then \,Split right
+WezTerm,ctrl+B then -,Split down
+WezTerm,ctrl+B then z,Zoom pane / unzoom
+WezTerm,ctrl+B then p,Pick pane by label
+WezTerm,ctrl+B then o,Copy last command output
+WezTerm,ctrl+B then [ or ],Previous / next shell prompt
+WezTerm,ctrl+B then w,Switch workspace
+WezTerm,ctrl+B then shift+W,New named workspace
+WezTerm,ctrl+B then r,Resize mode (hjkl or arrows / Esc)
+WezTerm,ctrl+B twice,Send a literal ctrl+B through
+WezTerm,ctrl+shift+A,Quick select paths and git shas
+WezTerm,ctrl+shift+F,Search scrollback
+WezTerm,ctrl+shift+X,Copy mode
+WezTerm,ctrl+shift+K,Clear scrollback
+WezTerm,ctrl+shift+R,Reload config
+WezTerm,ctrl+shift+L,Debug overlay
+WezTerm,ctrl+shift+P,Command palette
+WezTerm,ctrl+shift+O,Toggle transparency
+WezTerm,ctrl+shift+E,Toggle ligatures
+WezTerm,cmd+T,New tab
+WezTerm,cmd+1 to cmd+9,Jump to tab
+WezTerm,cmd+comma,Edit wezterm config
+AeroSpace,alt+h j k l,Focus window left down up right
+AeroSpace,alt+shift+h j k l,Move window
+AeroSpace,alt+1 to alt+7,Switch workspace
+AeroSpace,alt+shift+1 to 7,Move window to workspace
+AeroSpace,alt+tab,Last used workspace
+AeroSpace,alt+shift+tab,Move workspace to next monitor
+AeroSpace,ctrl+shift+left / right,Previous / next workspace
+AeroSpace,alt+slash,Tiles layout
+AeroSpace,alt+comma,Accordion layout
+AeroSpace,alt+shift+minus / equal,Resize window -50 / +50
+AeroSpace,alt+shift+semicolon,Service mode (r reset / f float / esc)
+macOS,cmd+shift+H,This cheatsheet
+macOS,cmd+shift+B,Toggle Mac menubar
+macOS,cmd twice and hold,KeyClu - shortcuts for the current app
+Commands,wtp,Open project workspace (sandboxed)
+Commands,wtp -n,Open project workspace on the host
+Commands,pi -c,Continue this project's last Pi session
+Commands,pi-inspect,Inspector pane for an async subagent run

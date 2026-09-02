@@ -1,0 +1,111 @@
+#!/usr/bin/env zsh
+# Open (or switch to) the WezTerm workspace for a project directory.
+#
+# With no argument, fuzzy-pick a git repo. Workspaces that already exist are
+# marked, so the picker doubles as a workspace switcher.
+#
+# Sandboxed by default: panes run inside a devcontainer via the `devcontainer`
+# exec domain in wezterm.lua. A repo's own .devcontainer/devcontainer.json wins;
+# otherwise ~/.config/devcontainer/devcontainer.json applies.
+#
+# Panes are ephemeral: Pi stores sessions per project directory, so `pi -c`
+# restores a conversation without the terminal holding it. Construction happens
+# here rather than in Lua so the domain stays a one-line change; switching lives
+# in the wezterm.lua user-var hook because `wezterm cli` has no
+# activate-workspace verb.
+emulate -L zsh
+set -euo pipefail
+
+search_roots=("$HOME/src")
+search_depth=4
+
+sandbox=true
+
+usage() {
+	cat <<'EOF'
+Usage: wtp [-n] [DIR]
+
+Open or switch to the WezTerm workspace for a project directory.
+Creates Pi on the left and a shell on the right, both inside a devcontainer.
+
+  wtp            Fuzzy-pick a git repo (* marks a live workspace)
+  wtp .          Use the current directory
+  wtp DIR        Use a specific directory
+
+  -n, --no-sandbox   Run on the host instead of in a container
+  -h, --help         Show this help
+EOF
+}
+
+while [[ "${1:-}" == -* ]]; do
+	case "$1" in
+		-n|--no-sandbox) sandbox=false; shift ;;
+		-h|--help) usage; exit 0 ;;
+		*) print -u2 "wtp: unknown option $1"; exit 2 ;;
+	esac
+done
+
+[[ -n "${WEZTERM_PANE:-}" ]] || { print -u2 "wtp: not running inside WezTerm"; exit 1 }
+
+live_workspaces() {
+	wezterm cli list --format json | python3 -c '
+import json, sys
+print("\n".join(sorted({p["workspace"] for p in json.load(sys.stdin)})))'
+}
+
+if (( $# )); then
+	dir="$1"
+else
+	(( $+commands[fzf] && $+commands[fd] )) || {
+		print -u2 "wtp: the picker needs fzf and fd; pass a directory instead"
+		exit 1
+	}
+	typeset -A live
+	while read -r name; do live[$name]=1; done < <(live_workspaces)
+	selection=$(
+		fd -H -t d '^\.git$' "${search_roots[@]}" --max-depth "$search_depth" \
+			--exclude node_modules 2>/dev/null |
+			sed 's|/\.git/*$||' | sort -u |
+			while read -r repo; do
+				print "${live[${repo:t}]+*}\t$repo"
+			done |
+			fzf --prompt 'project> ' --with-nth 2.. --delimiter '\t' \
+				--height 40% --reverse --no-sort
+	) || exit 0
+	dir="${selection#*$'\t'}"
+fi
+
+[[ -d "$dir" ]] || { print -u2 "wtp: not a directory: $dir"; exit 1 }
+dir="${dir:A}"
+name="${dir:t}"
+
+if ! live_workspaces | grep -qxF "$name"; then
+	domain=()
+	if $sandbox; then
+		(( $+commands[devcontainer] )) || {
+			print -u2 "wtp: devcontainer CLI not installed (brew install devcontainer), or use -n"
+			exit 1
+		}
+		config=()
+		[[ -f "$dir/.devcontainer/devcontainer.json" ]] ||
+			config=(--config "$HOME/.config/devcontainer/devcontainer.json")
+		print "wtp: starting container for $name (first run builds the image)..."
+		# Quiet on success, full log on failure: the CLI streams container build and
+		# mise progress to stderr, and those redraws do not collapse without a tty.
+		log=$(mktemp -t wtp-devcontainer)
+		if ! devcontainer up --workspace-folder "$dir" "${config[@]}" >"$log" 2>&1; then
+			print -u2 "wtp: devcontainer up failed for $name"
+			tail -20 "$log" >&2
+			print -u2 "wtp: full log at $log"
+			exit 1
+		fi
+		rm -f "$log"
+		domain=(--domain-name devcontainer)
+	fi
+	agent=$(wezterm cli spawn --new-window "${domain[@]}" --workspace "$name" --cwd "$dir")
+	wezterm cli split-pane --pane-id "$agent" --right --cwd "$dir" >/dev/null
+	wezterm cli send-text --pane-id "$agent" --no-paste $'pi\n'
+fi
+
+printf '\033]1337;SetUserVar=open_project=%s\007' "$(printf '%s' "$name" | base64 | tr -d '\n')"
+print "wtp: $name$($sandbox && print ' [sandboxed]')"

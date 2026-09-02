@@ -2,7 +2,7 @@ local icons = require("icons")
 local colors = require("colors")
 
 local whitelist = {
-    ["Spotify"] = true,
+    ["TIDAL"] = true,
     ["Music"] = true,
     ["Chromium"] = true
 };
