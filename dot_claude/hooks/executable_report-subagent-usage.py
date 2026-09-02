@@ -17,6 +17,7 @@ import os
 import re
 import sys
 import tempfile
+import time
 from collections.abc import Iterable
 from typing import Any
 
@@ -26,10 +27,10 @@ LOG_PATH = os.path.expanduser(
         "~/.claude/hooks/subagent-usage-v2.log",
     )
 )
-LAST_PATH = os.path.expanduser(
+LAST_DIR = os.path.expanduser(
     os.environ.get(
-        "CLAUDE_SUBAGENT_LAST",
-        "~/.claude/hooks/subagent-last.txt",
+        "CLAUDE_SUBAGENT_LAST_DIR",
+        "~/.claude/hooks/subagent-last",
     )
 )
 STATE_DIR = os.path.expanduser(
@@ -38,6 +39,7 @@ STATE_DIR = os.path.expanduser(
         "~/.claude/hooks/.subagent-usage-state",
     )
 )
+STATE_RETENTION_SECONDS = 30 * 24 * 60 * 60
 
 PARTS = (
     "input",
@@ -137,9 +139,9 @@ def read_transcript(path: str) -> dict[str, dict[str, Any]]:
                 message_id = record.get("requestId") or record.get("uuid")
             if not isinstance(message_id, str) or not message_id:
                 continue
-            if message_id in messages:
-                continue
-
+            # Claude appends progressively fuller copies of one assistant
+            # message as its content blocks arrive. Keep the last copy so the
+            # final usage replaces the earlier partial count.
             messages[message_id] = {
                 "model": safe_text(message.get("model")),
                 "effort": safe_text(effort_level(record.get("effort")), "unknown"),
@@ -222,6 +224,24 @@ def save_seen(path: str, message_ids: Iterable[str]) -> None:
             pass
 
 
+def prune_old_json(directory: str) -> None:
+    cutoff = time.time() - STATE_RETENTION_SECONDS
+    try:
+        entries = list(os.scandir(directory))
+    except OSError:
+        return
+    for entry in entries:
+        try:
+            if (
+                entry.is_file(follow_symlinks=False)
+                and entry.name.endswith(".json")
+                and entry.stat(follow_symlinks=False).st_mtime < cutoff
+            ):
+                os.unlink(entry.path)
+        except OSError:
+            continue
+
+
 def selected_messages(
     messages: dict[str, dict[str, Any]],
     message_ids: Iterable[str],
@@ -287,12 +307,26 @@ def append_line(path: str, line: str) -> None:
         pass
 
 
-def write_last(line: str) -> None:
+def write_last(session_id: Any, transcript_path: str, line: str) -> None:
+    key = state_key(session_id, transcript_path)
+    path = os.path.join(LAST_DIR, key + ".json")
     try:
-        with open(LAST_PATH, "w", encoding="utf-8") as handle:
-            handle.write(line + "\n")
+        os.makedirs(LAST_DIR, mode=0o700, exist_ok=True)
+        descriptor, temporary = tempfile.mkstemp(
+            prefix="last-",
+            suffix=".json",
+            dir=LAST_DIR,
+            text=True,
+        )
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            json.dump({"updated_at": int(time.time()), "text": line}, handle)
+            handle.write("\n")
+        os.replace(temporary, path)
     except OSError:
-        pass
+        try:
+            os.unlink(temporary)
+        except (OSError, UnboundLocalError):
+            pass
 
 
 def main() -> None:
@@ -303,6 +337,9 @@ def main() -> None:
             print("{}")
             return
         transcript_path = os.path.expanduser(transcript_path)
+
+        prune_old_json(STATE_DIR)
+        prune_old_json(LAST_DIR)
 
         messages = read_transcript(transcript_path)
         if not messages:
@@ -347,8 +384,10 @@ def main() -> None:
         session = safe_text(str(payload.get("session_id") or "")[:8], "--------")
         append_line(LOG_PATH, f"{stamp} {session} {summary}")
         write_last(
-            f"agent {agent_type} {'->'.join(models) or 'unknown'}/"
-            f"{'->'.join(efforts) or 'unknown'} {cost_text(current_cost)} "
+            payload.get("session_id"),
+            str(payload.get("transcript_path") or transcript_path),
+            f"{agent_type} · actual={'->'.join(models) or 'unknown'} · "
+            f"effort={'->'.join(efforts) or 'unknown'} · {cost_text(current_cost)} "
             f"{parts_text(current_parts)}"
         )
         save_seen(state_path, messages.keys())

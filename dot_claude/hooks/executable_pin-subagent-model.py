@@ -11,6 +11,7 @@ Forks cannot accept a model override and are reported but left inheriting the
 parent model.
 """
 import json
+import re
 import sys
 
 # subagent_type -> invocation-level model alias.
@@ -25,6 +26,13 @@ MODEL_POLICY = {
 }
 DEFAULT_MODEL = "sonnet"
 UNPINNABLE_TYPES = {"fork"}
+
+
+def task_label(value: object) -> str:
+    if not isinstance(value, str):
+        return "unnamed"
+    label = re.sub(r"\s+", " ", value).replace("·", "-").strip()
+    return label[:56] or "unnamed"
 
 
 def main() -> None:
@@ -42,15 +50,16 @@ def main() -> None:
     raw_type = tool_input.get("subagent_type")
     subagent_type = raw_type if isinstance(raw_type, str) and raw_type else "general-purpose"
     requested = tool_input.get("model")
-    requested_label = requested if isinstance(requested, str) else "<default>"
+    requested_label = requested if isinstance(requested, str) else "default"
+    task = task_label(tool_input.get("description"))
 
     if subagent_type in UNPINNABLE_TYPES:
         print(
             json.dumps(
                 {
                     "systemMessage": (
-                        f"subagent model: {subagent_type} requested={requested_label} "
-                        "policy=<inherits; override unavailable>"
+                        f"model policy · {subagent_type} · task={task} · "
+                        f"requested={requested_label} · enforced=inherit"
                     )
                 }
             )
@@ -60,7 +69,8 @@ def main() -> None:
     model = MODEL_POLICY.get(subagent_type, DEFAULT_MODEL)
     output = {
         "systemMessage": (
-            f"subagent model: {subagent_type} requested={requested_label} policy={model}"
+            f"model policy · {subagent_type} · task={task} · "
+            f"requested={requested_label} · enforced={model}"
         )
     }
 

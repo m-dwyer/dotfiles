@@ -12,6 +12,7 @@ hooks:
       hooks:
         - type: command
           command: "$HOME/.claude/hooks/restrict-reviewer-bash.py"
+          timeout: 3
 ---
 
 Review only the requested change set and the code needed to understand its
