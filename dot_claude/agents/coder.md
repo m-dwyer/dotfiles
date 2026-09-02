@@ -3,7 +3,7 @@ name: coder
 description: Fully specified mechanical code changes. Use only when the desired edit is already decided, such as applying a known rename, threading a parameter, deleting a dead branch, or making an obvious local correction. Do not use when implementation requires design judgement or choosing between approaches.
 model: claude-sonnet-5
 effort: low
-maxTurns: 12
+maxTurns: 24
 tools: Read, Grep, Glob, Edit, Write
 permissionMode: acceptEdits
 ---

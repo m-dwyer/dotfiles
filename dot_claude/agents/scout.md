@@ -3,7 +3,7 @@ name: scout
 description: Focused read-only code exploration. Use to locate behavior, trace control flow, identify relevant files, or answer a bounded codebase question before implementation. Do not use for edits, broad audits, or decisions about what the design should become.
 model: claude-sonnet-5
 effort: medium
-maxTurns: 14
+maxTurns: 20
 tools: Read, Grep, Glob
 permissionMode: plan
 ---

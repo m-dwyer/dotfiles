@@ -5,7 +5,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/hooks/wordswap.py"
+            "command": "$HOME/.claude/hooks/wordswap.py",
+            "timeout": 3
           }
         ]
       }
@@ -16,7 +17,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "rtk hook claude"
+            "command": "rtk hook claude",
+            "timeout": 5
           }
         ]
       },
@@ -25,7 +27,20 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/hooks/pin-subagent-model.py"
+            "command": "$HOME/.claude/hooks/pin-subagent-model.py",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/report-agent-result.py",
+            "timeout": 3
           }
         ]
       }
@@ -35,7 +50,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/hooks/report-subagent-usage.py"
+            "command": "$HOME/.claude/hooks/report-subagent-usage.py",
+            "timeout": 10
           }
         ]
       }
@@ -44,6 +60,10 @@
   "statusLine": {
     "type": "command",
     "command": "bash \"$HOME/.claude/statusline-command.sh\""
+  },
+  "subagentStatusLine": {
+    "type": "command",
+    "command": "$HOME/.claude/hooks/subagent-statusline.py"
   },
   "fallbackModel": [
     "claude-sonnet-5"
