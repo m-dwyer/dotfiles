@@ -3,7 +3,7 @@ name: reviewer
 description: Bounded review of an existing diff or explicitly named changes. Use only when the user asks for review. Find concrete correctness, durability, security, or contract risks supported by a failure scenario and file:line evidence; do not perform edits or generic best-practice commentary.
 model: claude-sonnet-5
 effort: medium
-maxTurns: 16
+maxTurns: 24
 tools: Read, Grep, Glob, Bash
 permissionMode: plan
 hooks:

@@ -17,16 +17,6 @@ CACHE_DIR = os.path.expanduser(
         "~/.claude/hooks/.subagent-status-cache",
     )
 )
-POLICY = {
-    "scout": "sonnet",
-    "coder": "sonnet",
-    "reviewer": "sonnet",
-    "planner": "opus",
-    "Explore": "sonnet",
-    "Plan": "sonnet",
-    "general-purpose": "sonnet",
-}
-
 
 def safe_key(value: Any) -> str:
     if isinstance(value, str) and re.fullmatch(r"[A-Za-z0-9_-]+", value):
@@ -111,18 +101,6 @@ def find_agent_files(
         return None, {}
     _, transcript, meta = max(matches, key=lambda match: match[0])
     return transcript, meta
-
-
-def resolved_policy(alias: Any) -> str | None:
-    if not isinstance(alias, str) or not alias:
-        return None
-    if alias == "sonnet":
-        return os.environ.get("ANTHROPIC_DEFAULT_SONNET_MODEL", "sonnet")
-    if alias == "opus":
-        return os.environ.get("ANTHROPIC_DEFAULT_OPUS_MODEL", "opus")
-    if alias == "haiku":
-        return os.environ.get("ANTHROPIC_DEFAULT_HAIKU_MODEL", "haiku")
-    return alias
 
 
 def compact_tokens(value: Any) -> str:
@@ -242,16 +220,17 @@ def main() -> None:
             if recorded_type:
                 cached["agent_type"] = agent_type
                 changed = True
-        model = cached.get("model")
-        if not isinstance(model, str) or not model:
-            model = latest_model(transcript) if isinstance(transcript, str) else None
-            if model:
-                cached["model"] = model
+        model = latest_model(transcript) if isinstance(transcript, str) else None
+        if model:
+            if cached.get("actual_model") != model:
+                cached["actual_model"] = model
                 changed = True
+        else:
+            cached_model = cached.get("actual_model")
+            model = cached_model if isinstance(cached_model, str) and cached_model.strip() else None
         if not model:
-            alias = meta.get("model") if meta else POLICY.get(agent_type)
-            policy = resolved_policy(alias)
-            model = f"{policy} (policy)" if policy else "model pending"
+            metadata_model = meta.get("model") if meta else None
+            model = metadata_model if isinstance(metadata_model, str) and metadata_model.strip() else "model pending"
         cache[task_id] = cached
         print(
             json.dumps(
