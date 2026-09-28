@@ -16,7 +16,7 @@ from typing import Any
 DEFAULT_MODEL = "sonnet"
 FRONTMATTER_MODEL_ALIASES = {
     "claude-sonnet-5": "sonnet",
-    "claude-opus-5": "opus",
+    "claude-opus-5-5": "opus",
     "claude-haiku-4-5-20251001": "haiku",
     "sonnet": "sonnet",
     "opus": "opus",

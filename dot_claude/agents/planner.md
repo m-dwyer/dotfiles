@@ -1,7 +1,7 @@
 ---
 name: planner
 description: Bounded architecture planning for a genuinely undecided, cross-cutting change. Use only when the user explicitly asks for architectural planning or invokes this agent. Do not use for executing an existing plan, routine implementation, or mechanical changes.
-model: claude-opus-5
+model: claude-opus-5-5
 effort: high
 maxTurns: 18
 tools: Read, Grep, Glob
