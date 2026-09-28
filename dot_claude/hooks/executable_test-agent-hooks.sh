@@ -26,7 +26,7 @@ assert_pinnable_model() {
 }
 pin() {
   output=$(printf '%s\n' "$1" | env CLAUDE_CONFIG_DIR="$config_dir" "$hooks_dir/pin-subagent-model.py")
-  if ! printf '%s\n' "$1" | jq -e '.tool_input.subagent_type == "fork" or .tool_input.subagent_type == "deep"' >/dev/null; then
+  if ! printf '%s\n' "$1" | jq -e '.tool_input.subagent_type == "fork"' >/dev/null; then
     assert_pinnable_model "pinnable hook result" "$output"
   fi
   printf '%s\n' "$output"
@@ -39,7 +39,7 @@ assert_json "pinnable calls always update input" '.hookSpecificOutput.updatedInp
 
 for pair in \
   'claude-sonnet-5 sonnet' \
-  'claude-opus-5 opus' \
+  'claude-opus-5-5 opus' \
   'claude-haiku-4-5-20251001 haiku' \
   'sonnet sonnet' \
   'opus opus' \
@@ -64,7 +64,7 @@ model: claude-opus-5-5
 ---
 EOF
 output=$(pin '{"cwd":"'"$project_dir"'","tool_input":{"subagent_type":"deep","description":"Investigate a difficult problem","model":"opus"}}')
-assert_json "deep defers to exact frontmatter model" '(.systemMessage | contains("declared=claude-opus-5-5 · enforced=frontmatter")) and (.hookSpecificOutput.updatedInput | has("model") | not)' "$output"
+assert_json "deep uses opus alias" '(.systemMessage | contains("declared=claude-opus-5-5 · enforced=opus")) and .hookSpecificOutput.updatedInput.model == "opus"' "$output"
 
 cat >"$config_dir/agents/different-file.md" <<'EOF'
 ---
@@ -75,7 +75,7 @@ EOF
 cat >"$project_dir/.claude/agents/near.md" <<'EOF'
 ---
 name: precedence-worker
-model: claude-opus-5
+model: claude-opus-5-5
 ---
 EOF
 output=$(pin '{"cwd":"'"$project_dir"'","tool_input":{"subagent_type":"precedence-worker","description":"Precedence","model":"sonnet"}}')
